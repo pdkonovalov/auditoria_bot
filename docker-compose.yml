@@ -12,10 +12,11 @@ services:
       - auditoria_bot_postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
   watchtower:
+    env_file: "config.env"
     image: containrrr/watchtower
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-    command: --interval 30
+    command: --interval 60
     restart: unless-stopped
 volumes:
   auditoria_bot_postgres_data:
