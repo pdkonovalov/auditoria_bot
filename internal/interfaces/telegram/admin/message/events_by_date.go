@@ -1,0 +1,78 @@
+package message
+
+import (
+	"fmt"
+	"time"
+
+	"github.com/pdkonovalov/auditoria_bot/internal/domain/entity"
+	"github.com/pdkonovalov/auditoria_bot/internal/interfaces/telegram/admin/callback"
+	"github.com/pdkonovalov/russian_time"
+
+	tele "gopkg.in/telebot.v4"
+)
+
+var EventsNotFoundMessage = "Мероприятия не найдены :("
+
+func EventsByDateMessageContent(
+	prevDate *string,
+	curDate string,
+	nextDate *string,
+	events []*entity.Event,
+) ([]any, error) {
+	time, err := time.Parse("02.01.2006", curDate)
+	if err != nil {
+		return nil, err
+	}
+	text := fmt.Sprintf("Мероприятия %s", russian_time.DayMonth(&time, russian_time.RCase2))
+	keyboard, err := eventsByDateInlineKeyboard(prevDate, nextDate, events)
+	if err != nil {
+		return nil, err
+	}
+	return []any{text, keyboard}, nil
+}
+
+func eventsByDateInlineKeyboard(
+	prevDate *string,
+	nextDate *string,
+	events []*entity.Event,
+) (*tele.ReplyMarkup, error) {
+	keyboard := make([][]tele.InlineButton, len(events))
+	for index, event := range events {
+		keyboard[index] = []tele.InlineButton{
+			{
+				Text:   fmt.Sprintf("%s %s", event.Time.Format("15:04"), event.Title),
+				Unique: callback.Event,
+				Data:   event.EventID,
+			},
+		}
+	}
+	navigationRow := make([]tele.InlineButton, 0)
+	if prevDate != nil {
+		time, err := time.Parse("02.01.2006", *prevDate)
+		if err != nil {
+			return nil, err
+		}
+		navigationRow = append(navigationRow,
+			tele.InlineButton{
+				Text:   fmt.Sprintf("< %s", russian_time.DayMonth(&time, russian_time.RCase2)),
+				Unique: callback.EventsByDate,
+				Data:   *prevDate,
+			},
+		)
+	}
+	if nextDate != nil {
+		time, err := time.Parse("02.01.2006", *nextDate)
+		if err != nil {
+			return nil, err
+		}
+		navigationRow = append(navigationRow,
+			tele.InlineButton{
+				Text:   fmt.Sprintf("%s >", russian_time.DayMonth(&time, russian_time.RCase2)),
+				Unique: callback.EventsByDate,
+				Data:   *nextDate,
+			},
+		)
+	}
+	keyboard = append(keyboard, navigationRow)
+	return &tele.ReplyMarkup{InlineKeyboard: keyboard}, nil
+}

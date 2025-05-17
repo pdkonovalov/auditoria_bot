@@ -1,0 +1,296 @@
+package message
+
+import (
+	"fmt"
+	"strings"
+	"unicode/utf16"
+
+	"github.com/pdkonovalov/auditoria_bot/internal/domain/entity"
+	"github.com/pdkonovalov/auditoria_bot/internal/interfaces/telegram/admin/callback"
+	"github.com/pdkonovalov/russian_time"
+
+	tele "gopkg.in/telebot.v4"
+)
+
+func EventMessageContent(
+	event *entity.Event,
+	createdBy *entity.User,
+	updatedBy *entity.User,
+	url string,
+	getBookingsOffline bool,
+	getBookingsOnline bool,
+	sendNotificationOffline bool,
+	sendNotificationOnline bool,
+) []any {
+	content := make([]any, 0)
+	content = append(content, eventMessage(event, createdBy, updatedBy, url)...)
+	content = append(content, eventInlineKeyboard(event, getBookingsOffline, getBookingsOnline, sendNotificationOffline, sendNotificationOnline))
+	return content
+}
+
+func eventMessage(
+	event *entity.Event,
+	createdBy *entity.User,
+	updatedBy *entity.User,
+	url string,
+) []any {
+	if event == nil {
+		return nil
+	}
+
+	parts := make([]string, 0)
+	entities := make(tele.Entities, 0)
+	curLen := 0
+
+	formatKey := "Формат:"
+	var formatValue string
+	if event.Offline && !event.Online {
+		formatValue = "офлайн"
+	} else if !event.Offline && event.Online {
+		formatValue = "онлайн"
+	} else {
+		formatValue = "офлайн и онлайн"
+	}
+	entities = append(entities,
+		tele.MessageEntity{
+			Type:   tele.EntityBold,
+			Offset: curLen,
+			Length: len(utf16.Encode([]rune(formatKey))),
+		},
+	)
+	parts = append(parts, fmt.Sprintf("%s %s\n", formatKey, formatValue))
+	curLen += len(utf16.Encode([]rune(parts[len(parts)-1])))
+
+	typeKey := "Тип:"
+	var typeValue string
+	if event.Offline && !event.Online {
+		if event.OfflinePaid {
+			typeValue = "платное"
+		} else {
+			typeValue = "бестплатное"
+		}
+	} else if !event.Offline && event.Online {
+		if event.OnlinePaid {
+			typeValue = "платное"
+		} else {
+			typeValue = "бестплатное"
+		}
+	} else if event.OfflinePaid == event.OnlinePaid {
+		if event.OfflinePaid {
+			typeValue = "платное"
+		} else {
+			typeValue = "бестплатное"
+		}
+	} else {
+		var typeOfflineValue string
+		if event.OfflinePaid {
+			typeOfflineValue = "платно"
+		} else {
+			typeOfflineValue = "бестплатно"
+		}
+		var typeOnlineValue string
+		if event.OnlinePaid {
+			typeOnlineValue = "платно"
+		} else {
+			typeOnlineValue = "бестплатно"
+		}
+		typeValue = fmt.Sprintf("офлайн - %s, онлайн - %s", typeOfflineValue, typeOnlineValue)
+	}
+	entities = append(entities,
+		tele.MessageEntity{
+			Type:   tele.EntityBold,
+			Offset: curLen,
+			Length: len(utf16.Encode([]rune(typeKey))),
+		},
+	)
+	parts = append(parts, fmt.Sprintf("%s %s\n", typeKey, typeValue))
+	curLen += len(utf16.Encode([]rune(parts[len(parts)-1])))
+
+	titleKey := "Название:"
+	titleValue := event.Title
+	entities = append(entities,
+		tele.MessageEntity{
+			Type:   tele.EntityBold,
+			Offset: curLen,
+			Length: len(utf16.Encode([]rune(titleKey))),
+		},
+	)
+	parts = append(parts, fmt.Sprintf("%s %s\n", titleKey, titleValue))
+	curLen += len(utf16.Encode([]rune(parts[len(parts)-1])))
+
+	timeKey := "Время начала:"
+	timeValue := event.Time.Format("15:04 02.01.2006")
+	entities = append(entities,
+		tele.MessageEntity{
+			Type:   tele.EntityBold,
+			Offset: curLen,
+			Length: len(utf16.Encode([]rune(timeKey))),
+		},
+	)
+	parts = append(parts, fmt.Sprintf("%s %s\n", timeKey, timeValue))
+	curLen += len(utf16.Encode([]rune(parts[len(parts)-1])))
+
+	if createdBy != nil {
+		createdKey := "Создано:"
+		createdValue := fmt.Sprintf(
+			"%s %s %s",
+			createdBy.FirstName,
+			createdBy.LastName,
+			event.CreatedAt.Format("15:04 02.01.2006"),
+		)
+		entities = append(entities,
+			tele.MessageEntity{
+				Type:   tele.EntityBold,
+				Offset: curLen,
+				Length: len(utf16.Encode([]rune(createdKey))),
+			},
+		)
+		parts = append(parts, fmt.Sprintf("%s %s\n", createdKey, createdValue))
+		curLen += len(utf16.Encode([]rune(parts[len(parts)-1])))
+	}
+
+	if event.UpdatedAt != nil && updatedBy != nil {
+		updatedKey := "Обновлено:"
+		updatedValue := fmt.Sprintf(
+			"%s %s %s",
+			updatedBy.FirstName,
+			updatedBy.LastName,
+			event.UpdatedAt.Format("15:04 02.01.2006"),
+		)
+		entities = append(entities,
+			tele.MessageEntity{
+				Type:   tele.EntityBold,
+				Offset: curLen,
+				Length: len(utf16.Encode([]rune(updatedKey))),
+			},
+		)
+		parts = append(parts, fmt.Sprintf("%s %s\n", updatedKey, updatedValue))
+		curLen += len(utf16.Encode([]rune(parts[len(parts)-1])))
+	}
+
+	urlKey := "Ссылка:"
+	urlValue := url
+	entities = append(entities,
+		tele.MessageEntity{
+			Type:   tele.EntityBold,
+			Offset: curLen,
+			Length: len(utf16.Encode([]rune(urlKey))),
+		},
+	)
+	parts = append(parts, fmt.Sprintf("%s %s", urlKey, urlValue))
+
+	text := strings.Join(parts, "")
+	if event.Photo == nil {
+		return []any{text, entities}
+	}
+	photo := event.Photo
+	photo.Caption = text
+	return []any{photo, entities}
+}
+
+func eventInlineKeyboard(
+	event *entity.Event,
+	getBookingsOffline bool,
+	getBookingsOnline bool,
+	sendNotificationOffline bool,
+	sendNotificationOnline bool,
+) *tele.ReplyMarkup {
+	keyboard := make([][]tele.InlineButton, 0)
+	keyboard = append(keyboard,
+		[]tele.InlineButton{
+			{
+				Text:   "Пост",
+				Unique: callback.EventPhotoText,
+				Data:   event.EventID,
+			},
+		},
+	)
+	if getBookingsOffline && !getBookingsOnline {
+		keyboard = append(keyboard,
+			[]tele.InlineButton{
+				{
+					Text:   "Список записавшихся",
+					Unique: callback.GetBookingsOffline,
+					Data:   event.EventID,
+				},
+			},
+		)
+	} else if !getBookingsOffline && getBookingsOnline {
+		keyboard = append(keyboard,
+			[]tele.InlineButton{
+				{
+					Text:   "Список записавшихся",
+					Unique: callback.GetBookingsOnline,
+					Data:   event.EventID,
+				},
+			},
+		)
+	} else {
+		keyboard = append(keyboard,
+			[]tele.InlineButton{
+				{
+					Text:   "Список записавшихся",
+					Unique: callback.GetBookings,
+					Data:   event.EventID,
+				},
+			},
+		)
+	}
+	keyboard = append(keyboard,
+		[]tele.InlineButton{
+			{
+				Text:   "Редактировать",
+				Unique: callback.EditEvent,
+				Data:   event.EventID,
+			},
+		},
+	)
+	if sendNotificationOffline && !sendNotificationOnline {
+		keyboard = append(keyboard,
+			[]tele.InlineButton{
+				{
+					Text:   "Отправить уведомление",
+					Unique: callback.SendNotificationOffline,
+					Data:   event.EventID,
+				},
+			},
+		)
+	} else if !sendNotificationOffline && sendNotificationOnline {
+		keyboard = append(keyboard,
+			[]tele.InlineButton{
+				{
+					Text:   "Отправить уведомление",
+					Unique: callback.SendNotificationOnline,
+					Data:   event.EventID,
+				},
+			},
+		)
+	} else {
+		keyboard = append(keyboard,
+			[]tele.InlineButton{
+				{
+					Text:   "Отправить уведомление",
+					Unique: callback.SendNotification,
+					Data:   event.EventID,
+				},
+			},
+		)
+	}
+	keyboard = append(keyboard,
+		[]tele.InlineButton{
+			{
+				Text:   "Удалить",
+				Unique: callback.DeleteEvent,
+				Data:   event.EventID,
+			},
+		},
+		[]tele.InlineButton{
+			{
+				Text:   fmt.Sprintf("< Мероприятия %s", russian_time.DayMonth(&event.Time, russian_time.RCase2)),
+				Unique: callback.EventsByDate,
+				Data:   event.Time.Format("02.01.2006"),
+			},
+		},
+	)
+	return &tele.ReplyMarkup{InlineKeyboard: keyboard}
+}

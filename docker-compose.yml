@@ -1,0 +1,16 @@
+services:
+  auditoria_bot:
+    env_file: "config.env"
+    depends_on:
+      - auditoria_bot_postgres
+    build:
+      context: .
+    restart: unless-stopped
+  auditoria_bot_postgres:
+    env_file: "config.env"
+    image: postgres
+    volumes:
+      - auditoria_bot_postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+volumes:
+  auditoria_bot_postgres_data:

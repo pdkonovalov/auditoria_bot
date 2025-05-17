@@ -1,0 +1,22 @@
+LogLevel: # prod, debug
+
+TelegramBotUsername: 
+TelegramBotToken: 
+TelegramBotAdminList:
+  - UserID: 
+    FirstName: 
+    LastName: 
+  - UserID: 
+    FirstName: 
+    LastName: 
+TelegramBotTimezone: # Asia/Tbilisi
+
+PostgresUser: 
+PostgresPassword: 
+PostgresHost: 
+PostgresPort: 
+PostgresDatabase: 
+PostgresSslMode: 
+
+EventIDLen: 
+EventIDCharset: # letters, numbers, abc123
