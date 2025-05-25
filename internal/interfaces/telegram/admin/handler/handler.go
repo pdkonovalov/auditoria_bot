@@ -263,7 +263,7 @@ func (h *AdminHandler) OnTextPhoto(c tele.Context) error {
 	case state.NewEventWaitInputTime:
 		return h.NewEventTimeInput(c)
 	case state.NewEventWaitInputPaymentDetails:
-		return h.NewEventTimeInput(c)
+		return h.NewEventPaymentDetailsInput(c)
 	case state.NewEventWaitInputPhotoText:
 		return h.NewEventPhotoTextInput(c)
 
