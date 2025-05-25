@@ -244,7 +244,7 @@ func (h *AdminHandler) OnTextPhoto(c tele.Context) error {
 			}
 			return c.Send(user_message.HelloAdminMessage, user_message.HelloEntities)
 		case c.Message().Text == command.Cancel.Text:
-			return nil
+			h.Hello(c)
 		}
 		return h.Hello(c)
 	}

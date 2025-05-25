@@ -269,7 +269,7 @@ func (h *UserHandler) OnTextPhoto(c tele.Context) error {
 		case c.Message().Text == command.SetContactInfo.Text:
 			return h.SetContactInfo(c)
 		case c.Message().Text == command.Cancel.Text:
-			return nil
+			return h.Hello(c)
 		case c.Message().Text == command.Admin.Text:
 			is_admin, ok := c.Get("is_admin").(bool)
 			if !ok {
