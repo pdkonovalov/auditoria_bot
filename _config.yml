@@ -10,6 +10,13 @@ TelegramBotAdminList:
     FirstName: 
     LastName: 
 TelegramBotTimezone: # Asia/Tbilisi
+TelegramBotDefaultPaymentDetails:
+  - Account: 
+    FirstName: 
+    LastName: 
+  - Account: 
+    FirstName: 
+    LastName: 
 
 PostgresUser: 
 PostgresPassword: 

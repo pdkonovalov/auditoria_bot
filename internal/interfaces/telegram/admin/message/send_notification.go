@@ -11,44 +11,33 @@ func SendNotificationMessageContent(
 	createdBy *entity.User,
 	updatedBy *entity.User,
 	url string,
-	sendNotificationOffline bool,
-	sendNotificationOnline bool,
+	bookingsOfflineCount int,
+	bookingsOnlineCount int,
 ) []any {
 	content := make([]any, 0)
-	content = append(content, eventMessage(event, createdBy, updatedBy, url)...)
-	content = append(content, sendNotificationInlineKeyboard(event, sendNotificationOffline, sendNotificationOnline))
+	content = append(content, eventMessage(event, createdBy, updatedBy, url, bookingsOfflineCount, bookingsOnlineCount)...)
+	content = append(content, sendNotificationInlineKeyboard(event))
 	return content
 }
 
 func sendNotificationInlineKeyboard(
 	event *entity.Event,
-	sendNotificationOffline bool,
-	sendNotificationOnline bool,
 ) *tele.ReplyMarkup {
-	keyboard := make([][]tele.InlineButton, 0)
-	if sendNotificationOffline {
-		keyboard = append(keyboard,
-			[]tele.InlineButton{
-				{
-					Text:   "Записавшимся оффлайн",
-					Unique: callback.SendNotificationOffline,
-					Data:   event.EventID,
-				},
+	keyboard := [][]tele.InlineButton{
+		[]tele.InlineButton{
+			{
+				Text:   "Записавшимся оффлайн",
+				Unique: callback.SendNotificationOffline,
+				Data:   event.EventID,
 			},
-		)
-	}
-	if sendNotificationOnline {
-		keyboard = append(keyboard,
-			[]tele.InlineButton{
-				{
-					Text:   "Записавшимся онлайн",
-					Unique: callback.SendNotificationOnline,
-					Data:   event.EventID,
-				},
+		},
+		[]tele.InlineButton{
+			{
+				Text:   "Записавшимся онлайн",
+				Unique: callback.SendNotificationOnline,
+				Data:   event.EventID,
 			},
-		)
-	}
-	keyboard = append(keyboard,
+		},
 		[]tele.InlineButton{
 			{
 				Text:   "< Назад",
@@ -56,7 +45,7 @@ func sendNotificationInlineKeyboard(
 				Data:   event.EventID,
 			},
 		},
-	)
+	}
 	return &tele.ReplyMarkup{InlineKeyboard: keyboard}
 }
 

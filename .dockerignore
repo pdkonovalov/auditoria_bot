@@ -1,2 +1,2 @@
-*.yml
-*.env
+config.yml
+config.env

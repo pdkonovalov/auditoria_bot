@@ -95,7 +95,8 @@ func (h *UserHandler) BookingInit(c tele.Context) error {
 	case state.BookingWaitInputFormat:
 		return c.Send(message.BookingWaitInputFormatMessage, message.BookingWaitInputFormatReplyKeyboard)
 	case state.BookingWaitInputPayment:
-		return c.Send(message.BookingWaitInputPaymentMessage, message.BookingWaitInputPaymentReplyKeyboard)
+		content := message.BookingWaitInputPaymentMessageContent(event)
+		return c.Send(content[0], content[1:]...)
 	case state.BookingWaitInputAdditionalInfo:
 		return c.Send(message.BookingWaitInputAdditionalInfoMessage, message.BookingWaitInputAdditionalInfoReplyKeyboard)
 	}
@@ -133,7 +134,7 @@ func (h *UserHandler) BookingContactInfoInput(c tele.Context) error {
 			return err
 		}
 		content := message.SetContactInfoMessageContent(&user)
-		err = c.Send(content[0], content[1])
+		err = c.Send(content[0], content[1:]...)
 		if err != nil {
 			return err
 		}
@@ -205,7 +206,7 @@ func (h *UserHandler) BookingContactInfoInput(c tele.Context) error {
 		return err
 	}
 	content := message.SetContactInfoMessageContent(&user)
-	err = c.Send(content[0], content[1])
+	err = c.Send(content[0], content[1:]...)
 	if err != nil {
 		return err
 	}
@@ -214,7 +215,8 @@ func (h *UserHandler) BookingContactInfoInput(c tele.Context) error {
 	case state.BookingWaitInputFormat:
 		return c.Send(message.BookingWaitInputFormatMessage, message.BookingWaitInputFormatReplyKeyboard)
 	case state.BookingWaitInputPayment:
-		return c.Send(message.BookingWaitInputPaymentMessage, message.BookingWaitInputPaymentReplyKeyboard)
+		content := message.BookingWaitInputPaymentMessageContent(event)
+		return c.Send(content[0], content[1:]...)
 	case state.BookingWaitInputAdditionalInfo:
 		return c.Send(message.BookingWaitInputAdditionalInfoMessage, message.BookingWaitInputAdditionalInfoReplyKeyboard)
 	}
@@ -295,7 +297,8 @@ func (h *UserHandler) BookingFormatInput(c tele.Context) error {
 
 	switch user.State {
 	case state.BookingWaitInputPayment:
-		return c.Send(message.BookingWaitInputPaymentMessage, message.BookingWaitInputPaymentReplyKeyboard)
+		content := message.BookingWaitInputPaymentMessageContent(event)
+		return c.Send(content[0], content[1:]...)
 	case state.BookingWaitInputAdditionalInfo:
 		return c.Send(message.BookingWaitInputAdditionalInfoMessage, message.BookingWaitInputAdditionalInfoReplyKeyboard)
 	}

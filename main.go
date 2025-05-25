@@ -89,6 +89,7 @@ func main() {
 		defer wg.Done()
 		<-ctx.Done()
 		log.Print("shutdown bot...")
+		pool.Close()
 		bot.Stop()
 	}()
 	wg.Wait()

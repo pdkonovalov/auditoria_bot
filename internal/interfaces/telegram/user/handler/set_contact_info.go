@@ -2,6 +2,7 @@ package handler
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/pdkonovalov/auditoria_bot/internal/domain/entity"
 	"github.com/pdkonovalov/auditoria_bot/internal/interfaces/telegram/user/message"
@@ -69,5 +70,8 @@ func (h *UserHandler) EditContactInfoInput(c tele.Context) error {
 		return err
 	}
 	content := message.SetContactInfoMessageContent(&user)
+
+	time.Sleep(time.Second)
+
 	return c.Send(content[0], content[1:]...)
 }

@@ -16,11 +16,15 @@ import (
 )
 
 type AdminHandler struct {
-	botUsername       string
+	botUsername string
+
 	userRepository    repository.UserRepository
 	eventRepository   repository.EventRepository
 	bookingRepository repository.BookingRepository
-	location          *time.Location
+
+	location *time.Location
+
+	defaultPaymentDetails config.PaymentDetailsList
 }
 
 func NewAdminHandler(
@@ -34,11 +38,12 @@ func NewAdminHandler(
 		return nil, err
 	}
 	return &AdminHandler{
-		botUsername:       cfg.TelegramBotUsername,
-		userRepository:    userRepository,
-		eventRepository:   eventRepository,
-		bookingRepository: bookingRepository,
-		location:          location,
+		botUsername:           cfg.TelegramBotUsername,
+		userRepository:        userRepository,
+		eventRepository:       eventRepository,
+		bookingRepository:     bookingRepository,
+		location:              location,
+		defaultPaymentDetails: cfg.TelegramBotDefaultPaymentDetails,
 	}, nil
 }
 
@@ -150,6 +155,11 @@ func (h *AdminHandler) OnCallback(c tele.Context) error {
 		c.Set("eventID", data)
 		return h.EditEventTimeInit(c)
 
+	// edit event payment details button
+	case callback.EditPaymentDetails:
+		c.Set("eventID", data)
+		return h.EditEventPaymentDetailsInit(c)
+
 	// edit event photo and text button
 	case callback.EditPhotoText:
 		c.Set("eventID", data)
@@ -252,6 +262,8 @@ func (h *AdminHandler) OnTextPhoto(c tele.Context) error {
 		return h.NewEventTitleInput(c)
 	case state.NewEventWaitInputTime:
 		return h.NewEventTimeInput(c)
+	case state.NewEventWaitInputPaymentDetails:
+		return h.NewEventTimeInput(c)
 	case state.NewEventWaitInputPhotoText:
 		return h.NewEventPhotoTextInput(c)
 
@@ -264,6 +276,8 @@ func (h *AdminHandler) OnTextPhoto(c tele.Context) error {
 		return h.EditEventTitleInput(c)
 	case state.EditEventWaitInputTime:
 		return h.EditEventTimeInput(c)
+	case state.EditEventWaitInputPaymentDetails:
+		return h.EditEventPaymentDetailsInput(c)
 	case state.EditEventWaitInputPhotoText:
 		return h.EditEventPhotoTextInput(c)
 

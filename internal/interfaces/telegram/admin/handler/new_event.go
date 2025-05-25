@@ -2,6 +2,7 @@ package handler
 
 import (
 	"fmt"
+	"strings"
 	"time"
 	"unicode/utf16"
 
@@ -239,6 +240,64 @@ func (h *AdminHandler) NewEventTimeInput(c tele.Context) error {
 	}
 
 	event.Time = time
+
+	exists, err = h.eventRepository.Update(event)
+	if err != nil {
+		return fmt.Errorf("Failed update event: %s", err)
+	}
+	if !exists {
+		return fmt.Errorf("Failed update event, event not exists")
+	}
+
+	if event.OfflinePaid || event.OnlinePaid {
+		user.State = state.NewEventWaitInputPaymentDetails
+	} else {
+		user.State = state.NewEventWaitInputPhotoText
+	}
+
+	exists, err = h.userRepository.Update(&user)
+	if err != nil {
+		return fmt.Errorf("Failed update user: %s", err)
+	}
+	if !exists {
+		return fmt.Errorf("Failed update user, user not exists")
+	}
+
+	if user.State == state.NewEventWaitInputPaymentDetails {
+		return c.Send(message.WaitInputPaymentDetailsMessage, message.WaitInputPaymentDetailsReplyKeyboard(h.defaultPaymentDetails))
+	}
+	return c.Send(message.WaitInputPhotoTextMessage)
+}
+
+func (h *AdminHandler) NewEventPaymentDetailsInput(c tele.Context) error {
+	user, ok := c.Get("user").(entity.User)
+	if !ok {
+		return fmt.Errorf("Failed get user from context")
+	}
+
+	eventID, ok := user.Context["eventID"].(string)
+	if !ok {
+		return fmt.Errorf("Failed get event id from user context")
+	}
+	event, exists, err := h.eventRepository.Get(eventID)
+	if err != nil {
+		return fmt.Errorf("Failed get event: %s", err)
+	}
+	if !exists {
+		return fmt.Errorf("Failed get event, event not exists")
+	}
+
+	parts := strings.Split(c.Message().Text, " ")
+	if len(parts) != 3 ||
+		len(parts[0]) == 0 ||
+		len(parts[1]) == 0 ||
+		len(parts[2]) == 0 {
+		return c.Send(message.WaitInputPaymentDetailsInvalidInputMessage)
+	}
+
+	event.PaymentDetailsFirstName = parts[0]
+	event.PaymentDetailsLastName = parts[1]
+	event.PaymentDetailsAccount = parts[2]
 
 	exists, err = h.eventRepository.Update(event)
 	if err != nil {

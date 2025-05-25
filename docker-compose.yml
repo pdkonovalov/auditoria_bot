@@ -1,17 +1,20 @@
 services:
   auditoria_bot:
+    container_name: auditoria_bot
     env_file: "config.env"
     image: pdkonovalov/auditoria_bot
     depends_on:
       - auditoria_bot_postgres
     restart: unless-stopped
   auditoria_bot_postgres:
+    container_name: auditoria_bot_postgres
     env_file: "config.env"
     image: postgres
     volumes:
       - auditoria_bot_postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
   watchtower:
+    container_name: watchtower
     env_file: "config.env"
     image: containrrr/watchtower
     volumes:
@@ -20,3 +23,4 @@ services:
     restart: unless-stopped
 volumes:
   auditoria_bot_postgres_data:
+    name: auditoria_bot_postgres_data

@@ -19,13 +19,14 @@ const (
 )
 
 const (
-	EditEvent       = "editevent"
-	EditFormat      = "editformat"
-	EditOfflinePaid = "editofflinepaid"
-	EditOnlinePaid  = "editonlinepaid"
-	EditTitle       = "edittitle"
-	EditTime        = "edittime"
-	EditPhotoText   = "editphototext"
+	EditEvent          = "editevent"
+	EditFormat         = "editformat"
+	EditOfflinePaid    = "editofflinepaid"
+	EditOnlinePaid     = "editonlinepaid"
+	EditTitle          = "edittitle"
+	EditTime           = "edittime"
+	EditPaymentDetails = "editpaymentdetails"
+	EditPhotoText      = "editphototext"
 )
 
 const (

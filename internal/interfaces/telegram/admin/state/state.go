@@ -9,19 +9,21 @@ const (
 )
 
 const (
-	NewEventWaitInputFormat    = "newevent/waitinput/format"
-	NewEventWaitInputPaid      = "newevent/waitinput/paid"
-	NewEventWaitInputTitle     = "newevent/waitinput/title"
-	NewEventWaitInputTime      = "newevent/waitinput/time"
-	NewEventWaitInputPhotoText = "newevent/waitinput/phototext"
+	NewEventWaitInputFormat         = "newevent/waitinput/format"
+	NewEventWaitInputPaid           = "newevent/waitinput/paid"
+	NewEventWaitInputTitle          = "newevent/waitinput/title"
+	NewEventWaitInputTime           = "newevent/waitinput/time"
+	NewEventWaitInputPaymentDetails = "newevent/waitinput/paymentdetails"
+	NewEventWaitInputPhotoText      = "newevent/waitinput/phototext"
 )
 
 const (
-	EditEventWaitInputFormat    = "editevent/waitinput/format"
-	EditEventWaitInputPaid      = "editevent/waitinput/paid"
-	EditEventWaitInputTitle     = "editevent/waitinput/title"
-	EditEventWaitInputTime      = "editevent/waitinput/time"
-	EditEventWaitInputPhotoText = "editevent/waitinput/phototext"
+	EditEventWaitInputFormat         = "editevent/waitinput/format"
+	EditEventWaitInputPaid           = "editevent/waitinput/paid"
+	EditEventWaitInputTitle          = "editevent/waitinput/title"
+	EditEventWaitInputTime           = "editevent/waitinput/time"
+	EditEventWaitInputPaymentDetails = "editevent/waitinput/paymentdetails"
+	EditEventWaitInputPhotoText      = "editevent/waitinput/phototext"
 )
 
 const (

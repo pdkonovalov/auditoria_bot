@@ -1,6 +1,11 @@
 package message
 
 import (
+	"fmt"
+	"strings"
+	"unicode/utf16"
+
+	"github.com/pdkonovalov/auditoria_bot/internal/domain/entity"
 	tele "gopkg.in/telebot.v4"
 )
 
@@ -69,8 +74,41 @@ var (
 	}
 )
 
+func BookingWaitInputPaymentMessageContent(event *entity.Event) []any {
+	parts := make([]string, 0)
+	entities := make(tele.Entities, 0)
+	curLen := 0
+
+	messageFirstPart := "Пришлите скриншот оплаты мероприятия.\n\nРеквизиты:\n"
+	parts = append(parts, messageFirstPart)
+	curLen += len(utf16.Encode([]rune(parts[len(parts)-1])))
+
+	name := fmt.Sprintf("%s %s\n", event.PaymentDetailsFirstName, event.PaymentDetailsLastName)
+	parts = append(parts, name)
+	entities = append(entities,
+		tele.MessageEntity{
+			Type:   tele.EntityItalic,
+			Offset: curLen,
+			Length: len(utf16.Encode([]rune(name))),
+		},
+	)
+	curLen += len(utf16.Encode([]rune(parts[len(parts)-1])))
+
+	account := event.PaymentDetailsAccount
+	parts = append(parts, account)
+	entities = append(entities,
+		tele.MessageEntity{
+			Type:   tele.EntityCode,
+			Offset: curLen,
+			Length: len(utf16.Encode([]rune(account))),
+		},
+	)
+
+	text := strings.Join(parts, "")
+	return []any{text, entities, BookingWaitInputPaymentReplyKeyboard}
+}
+
 const (
-	BookingWaitInputPaymentMessage             = "Пришлите скриншот оплаты мероприятия."
 	BookingWaitInputPaymentInvalidInputMessage = "Пришлите скриншот оплаты или укажите, что заплатите потом, с помощью кнопки снизу."
 	BookingWaitInputPaymentReplyKeyboardText   = "Заплачу потом"
 )

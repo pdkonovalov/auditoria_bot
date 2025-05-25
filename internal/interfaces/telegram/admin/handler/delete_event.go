@@ -72,7 +72,6 @@ func (h *AdminHandler) DeleteEventAreYouSureInput(c tele.Context) error {
 	}
 
 	if needDelete {
-
 		exists, err := h.eventRepository.Delete(eventID)
 		if err != nil {
 			return fmt.Errorf("Failed delete event: %s", err)

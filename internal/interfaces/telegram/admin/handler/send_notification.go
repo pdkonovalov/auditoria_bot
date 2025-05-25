@@ -2,6 +2,7 @@ package handler
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/pdkonovalov/auditoria_bot/internal/domain/entity"
 	"github.com/pdkonovalov/auditoria_bot/internal/interfaces/telegram/admin/message"
@@ -41,34 +42,14 @@ func (h *AdminHandler) SendNotification(c tele.Context) error {
 	}
 	eventURL := h.generateBotUrl(eventID)
 
-	var (
-		sendNotificationOffline bool
-		sendNotificationOnline  bool
-	)
-	bookings, err := h.bookingRepository.GetByEventID(eventID)
+	bookingsOffline, err := h.bookingRepository.GetByEventID(eventID, true, false)
 	if err != nil {
-		return fmt.Errorf("Failed get bookings: %s", err)
+		return fmt.Errorf("Failed get offline bookings: %s", err)
 	}
-	var (
-		bookingsOfflineExists bool
-		bookingsOnlineExists  bool
-	)
-	for _, booking := range bookings {
-		if booking.Offline {
-			bookingsOfflineExists = true
-		}
-		if booking.Online {
-			bookingsOnlineExists = true
-		}
-		if bookingsOfflineExists && bookingsOnlineExists {
-			break
-		}
-	}
-	if event.Offline || bookingsOfflineExists {
-		sendNotificationOffline = true
-	}
-	if event.Online || bookingsOnlineExists {
-		sendNotificationOnline = true
+
+	bookingsOnline, err := h.bookingRepository.GetByEventID(eventID, false, true)
+	if err != nil {
+		return fmt.Errorf("Failed get online bookings: %s", err)
 	}
 
 	content := message.SendNotificationMessageContent(
@@ -76,8 +57,9 @@ func (h *AdminHandler) SendNotification(c tele.Context) error {
 		createdBy,
 		updatedBy,
 		eventURL,
-		sendNotificationOffline,
-		sendNotificationOnline)
+		len(bookingsOffline),
+		len(bookingsOnline),
+	)
 	err = c.EditOrSend(content[0], content[1:]...)
 	if err != nil {
 		return c.Send(content[0], content[1:]...)
@@ -107,19 +89,12 @@ func (h *AdminHandler) SendNotificationInit(c tele.Context) error {
 		return fmt.Errorf("Unexpected format value: %s", format)
 	}
 
-	allBookings, err := h.bookingRepository.GetByEventID(eventID)
-	if err != nil {
-		return fmt.Errorf("Failed get bookings: %s", err)
-	}
-
-	bookings := make([]*entity.Booking, 0)
 	if format == "offline" {
-		for _, booking := range allBookings {
-			if booking.Offline {
-				bookings = append(bookings, booking)
-			}
+		bookingsOffline, err := h.bookingRepository.GetByEventID(eventID, true, false)
+		if err != nil {
+			return fmt.Errorf("Failed get offline bookings: %s", err)
 		}
-		if len(bookings) == 0 {
+		if len(bookingsOffline) == 0 {
 			if event.Offline && !event.Online {
 				return c.Send(message.BookingsNotFoundMessage)
 			} else {
@@ -127,12 +102,11 @@ func (h *AdminHandler) SendNotificationInit(c tele.Context) error {
 			}
 		}
 	} else {
-		for _, booking := range allBookings {
-			if booking.Online {
-				bookings = append(bookings, booking)
-			}
+		bookingsOnline, err := h.bookingRepository.GetByEventID(eventID, false, true)
+		if err != nil {
+			return fmt.Errorf("Failed get online bookings: %s", err)
 		}
-		if len(bookings) == 0 {
+		if len(bookingsOnline) == 0 {
 			if event.Online && !event.Offline {
 				return c.Send(message.BookingsNotFoundMessage)
 			} else {
@@ -199,17 +173,11 @@ func (h *AdminHandler) SendNotificationPhotoTextInput(c tele.Context) error {
 		content = append(content, text, entities)
 	}
 
-	allBookings, err := h.bookingRepository.GetByEventID(eventID)
-	if err != nil {
-		return fmt.Errorf("Failed get bookings: %s", err)
-	}
-
-	bookings := make([]*entity.Booking, 0)
+	var bookings []*entity.Booking
 	if format == "offline" {
-		for _, booking := range allBookings {
-			if booking.Offline {
-				bookings = append(bookings, booking)
-			}
+		bookings, err = h.bookingRepository.GetByEventID(eventID, true, false)
+		if err != nil {
+			return fmt.Errorf("Failed get offline bookings: %s", err)
 		}
 		if len(bookings) == 0 {
 			if event.Offline && !event.Online {
@@ -219,10 +187,9 @@ func (h *AdminHandler) SendNotificationPhotoTextInput(c tele.Context) error {
 			}
 		}
 	} else {
-		for _, booking := range allBookings {
-			if booking.Online {
-				bookings = append(bookings, booking)
-			}
+		bookings, err = h.bookingRepository.GetByEventID(eventID, false, true)
+		if err != nil {
+			return fmt.Errorf("Failed get online bookings: %s", err)
 		}
 		if len(bookings) == 0 {
 			if event.Online && !event.Offline {
@@ -233,10 +200,15 @@ func (h *AdminHandler) SendNotificationPhotoTextInput(c tele.Context) error {
 		}
 	}
 
+	sendedCount := 0
 	for _, booking := range bookings {
 		_, err := c.Bot().Send(&tele.User{ID: booking.UserID}, content[0], content[1:]...)
 		if err != nil {
 			return err
+		}
+		sendedCount++
+		if sendedCount == 30 {
+			time.Sleep(time.Second)
 		}
 	}
 

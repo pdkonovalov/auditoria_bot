@@ -178,23 +178,11 @@ var (
 	}
 )
 
-const (
-	EditBookingWaitInputPaymentMessage             = "Пришлите скриншот оплаты мероприятия."
-	EditBookingWaitInputPaymentInvalidInputMessage = "Пришлите скриншот оплаты или укажите, что заплатите потом, с помощью кнопки снизу."
-)
+var EditBookingWaitInputPaymentMessageContent = BookingWaitInputPaymentMessageContent
 
-var (
-	EditBookingWaitInputPaymentReplyKeyboardText = "Заплачу потом"
-	EditBookingWaitInputPaymentReplyKeyboard     = &tele.ReplyMarkup{
-		ReplyKeyboard: [][]tele.ReplyButton{
-			{
-				{
-					Text: BookingWaitInputPaymentReplyKeyboardText,
-				},
-			},
-		},
-		OneTimeKeyboard: true,
-	}
+const (
+	EditBookingWaitInputPaymentInvalidInputMessage = BookingWaitInputPaymentInvalidInputMessage
+	EditBookingWaitInputPaymentReplyKeyboardText   = BookingWaitInputPaymentReplyKeyboardText
 )
 
 const (

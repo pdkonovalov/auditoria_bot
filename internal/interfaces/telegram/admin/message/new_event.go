@@ -3,6 +3,7 @@ package message
 import (
 	"fmt"
 
+	"github.com/pdkonovalov/auditoria_bot/internal/config"
 	tele "gopkg.in/telebot.v4"
 )
 
@@ -51,6 +52,29 @@ var (
 	}
 	WaitInputPaidInvalidInputMessage = "Укажите тип - платное/бесплатное, с помощью кнопки снизу"
 )
+
+var (
+	WaitInputPaymentDetailsMessage             = "Укажите реквизиты оплаты."
+	WaitInputPaymentDetailsInvalidInputMessage = "Укажите реквизиты оплаты в формате: имя фамилия номер счёта. Или выберете реквизиты по умолчанию с помощью кнопки ниже."
+)
+
+func WaitInputPaymentDetailsReplyKeyboard(defaultPaymentDetailsList config.PaymentDetailsList) *tele.ReplyMarkup {
+	keyboard := make([][]tele.ReplyButton, 0)
+	for _, defaultPaymentDetails := range defaultPaymentDetailsList {
+		defaultPaymentDetailsStr := fmt.Sprintf("%s %s %s", defaultPaymentDetails.FirstName, defaultPaymentDetails.LastName, defaultPaymentDetails.Account)
+		keyboard = append(keyboard,
+			[]tele.ReplyButton{
+				{
+					Text: defaultPaymentDetailsStr,
+				},
+			},
+		)
+	}
+	return &tele.ReplyMarkup{
+		ReplyKeyboard:   keyboard,
+		OneTimeKeyboard: true,
+	}
+}
 
 var (
 	WaitInputTitleMessage = "Укажите название мероприятия"

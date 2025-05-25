@@ -76,12 +76,12 @@ func (r *repository) Get(userID int64, eventID string) (*entity.Booking, bool, e
 	return &b, true, nil
 }
 
-func (r *repository) GetByEventID(eventID string) ([]*entity.Booking, error) {
+func (r *repository) GetByEventID(eventID string, offline, online bool) ([]*entity.Booking, error) {
 	var query = `SELECT event_id, user_id, payment, text, offline, online, created_at, updated_at, draft
-		FROM bookings
-		WHERE event_id = $1 AND draft IS FALSE
-		ORDER BY COALESCE(updated_at, created_at) ASC`
-	rows, err := r.pool.Query(context.Background(), query, eventID)
+	FROM bookings
+	WHERE event_id = $1 AND draft IS FALSE AND offline = $2 AND online = $3
+	ORDER BY COALESCE(updated_at, created_at) ASC`
+	rows, err := r.pool.Query(context.Background(), query, eventID, offline, online)
 	if err != nil {
 		return nil, err
 	}

@@ -40,38 +40,14 @@ func (h *AdminHandler) Event(c tele.Context) error {
 	}
 	eventURL := h.generateBotUrl(eventID)
 
-	var (
-		getBookingsOffline      bool
-		getBookingsOnline       bool
-		sendNotificationOffline bool
-		sendNotificationOnline  bool
-	)
-	bookings, err := h.bookingRepository.GetByEventID(eventID)
+	bookingsOffline, err := h.bookingRepository.GetByEventID(eventID, true, false)
 	if err != nil {
-		return fmt.Errorf("Failed get bookings: %s", err)
+		return fmt.Errorf("Failed get offline bookings: %s", err)
 	}
-	var (
-		bookingsOfflineExists bool
-		bookingsOnlineExists  bool
-	)
-	for _, booking := range bookings {
-		if booking.Offline {
-			bookingsOfflineExists = true
-		}
-		if booking.Online {
-			bookingsOnlineExists = true
-		}
-		if bookingsOfflineExists && bookingsOnlineExists {
-			break
-		}
-	}
-	if event.Offline || bookingsOfflineExists {
-		getBookingsOffline = true
-		sendNotificationOffline = true
-	}
-	if event.Online || bookingsOnlineExists {
-		getBookingsOnline = true
-		sendNotificationOnline = true
+
+	bookingsOnline, err := h.bookingRepository.GetByEventID(eventID, false, true)
+	if err != nil {
+		return fmt.Errorf("Failed get online bookings: %s", err)
 	}
 
 	content := message.EventMessageContent(
@@ -79,10 +55,9 @@ func (h *AdminHandler) Event(c tele.Context) error {
 		createdBy,
 		updatedBy,
 		eventURL,
-		getBookingsOffline,
-		getBookingsOnline,
-		sendNotificationOffline,
-		sendNotificationOnline)
+		len(bookingsOffline),
+		len(bookingsOnline),
+	)
 	err = c.EditOrSend(content[0], content[1:]...)
 	if err != nil {
 		return c.Send(content[0], content[1:]...)

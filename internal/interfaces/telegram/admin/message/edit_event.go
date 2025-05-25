@@ -12,9 +12,11 @@ func EditEventMessageContent(
 	createdBy *entity.User,
 	updatedBy *entity.User,
 	url string,
+	bookingsOfflineCount int,
+	bookingsOnlineCount int,
 ) []any {
 	content := make([]any, 0)
-	content = append(content, eventMessage(event, createdBy, updatedBy, url)...)
+	content = append(content, eventMessage(event, createdBy, updatedBy, url, bookingsOfflineCount, bookingsOnlineCount)...)
 	content = append(content, editEventInlineKeyboard(event))
 	return content
 }
@@ -83,6 +85,19 @@ func editEventInlineKeyboard(event *entity.Event) *tele.ReplyMarkup {
 				Data:   event.EventID,
 			},
 		},
+	)
+	if event.OfflinePaid || event.OnlinePaid {
+		keyboard = append(keyboard,
+			[]tele.InlineButton{
+				{
+					Text:   "Редактировать реквизиты",
+					Unique: callback.EditPaymentDetails,
+					Data:   event.EventID,
+				},
+			},
+		)
+	}
+	keyboard = append(keyboard,
 		[]tele.InlineButton{
 			{
 				Text:   "Редактировать пост",

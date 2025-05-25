@@ -31,7 +31,10 @@ func (f *AdminList) SetValue(v string) error {
 	admin_list := make(AdminList, 0)
 	for _, admin_str := range strings.Split(v, ", ") {
 		admin_str_parts := strings.Split(admin_str, " ")
-		if len(admin_str_parts) != 3 {
+		if len(admin_str_parts) != 3 ||
+			len(admin_str_parts[0]) == 0 ||
+			len(admin_str_parts[1]) == 0 ||
+			len(admin_str_parts[2]) == 0 {
 			return fmt.Errorf("Not valid telegram admin list, must be: '<firstname> <lastname> <user_id>, <firstname> ... '")
 		}
 		admin := Admin{
@@ -49,13 +52,44 @@ func (f *AdminList) SetValue(v string) error {
 	return nil
 }
 
+type PaymentDetails struct {
+	Account   string `yaml:"Account"`
+	FirstName string `yaml:"FirstName"`
+	LastName  string `yaml:"LastName"`
+}
+
+type PaymentDetailsList []PaymentDetails
+
+func (f *PaymentDetailsList) SetValue(v string) error {
+	payment_details_list := make(PaymentDetailsList, 0)
+	for _, payment_details_str := range strings.Split(v, ", ") {
+		parts := strings.Split(payment_details_str, " ")
+		if len(parts) != 3 ||
+			len(parts[0]) == 0 ||
+			len(parts[1]) == 0 ||
+			len(parts[2]) == 0 {
+			return fmt.Errorf("Not valid payment details, must be: '<firstname> <lastname> <account>")
+		}
+		payment_details_list = append(payment_details_list,
+			PaymentDetails{
+				Account:   parts[2],
+				FirstName: parts[0],
+				LastName:  parts[1],
+			},
+		)
+	}
+	*f = payment_details_list
+	return nil
+}
+
 type Config struct {
 	LogLevel string `yaml:"LogLevel" env:"LOG_LEVEL"`
 
-	TelegramBotUsername  string    `yaml:"TelegramBotUsername" env:"TELEGRAM_BOT_USERNAME"`
-	TelegramBotToken     string    `yaml:"TelegramBotToken" env:"TELEGRAM_BOT_TOKEN"`
-	TelegramBotAdminList AdminList `yaml:"TelegramBotAdminList" env:"TELEGRAM_BOT_ADMIN_LIST"`
-	TelegramBotTimezone  string    `yaml:"TelegramBotTimezone" env:"TELEGRAM_BOT_TIMEZONE"`
+	TelegramBotUsername              string             `yaml:"TelegramBotUsername" env:"TELEGRAM_BOT_USERNAME"`
+	TelegramBotToken                 string             `yaml:"TelegramBotToken" env:"TELEGRAM_BOT_TOKEN"`
+	TelegramBotAdminList             AdminList          `yaml:"TelegramBotAdminList" env:"TELEGRAM_BOT_ADMIN_LIST"`
+	TelegramBotTimezone              string             `yaml:"TelegramBotTimezone" env:"TELEGRAM_BOT_TIMEZONE"`
+	TelegramBotDefaultPaymentDetails PaymentDetailsList `yaml:"TelegramBotDefaultPaymentDetails" env:"TELEGRAM_BOT_DEFAULT_PAYMENT_DETAILS"`
 
 	PostgresUser     string `yaml:"PostgresUser" env:"POSTGRES_USER"`
 	PostgresPassword string `yaml:"PostgresPassword" env:"POSTGRES_PASSWORD"`

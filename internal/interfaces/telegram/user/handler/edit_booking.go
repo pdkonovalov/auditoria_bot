@@ -175,6 +175,9 @@ func (h *UserHandler) EditBookingFormatInput(c tele.Context) error {
 		return err
 	}
 	content := message.EditBookingMessageContent(event, booking, filter)
+
+	time.Sleep(time.Second)
+
 	return c.Send(content[0], content[1:]...)
 }
 
@@ -187,7 +190,7 @@ func (h *UserHandler) EditBookingPaymentInit(c tele.Context) error {
 	if !ok {
 		return fmt.Errorf("Failed get event id from context")
 	}
-	_, exists, err := h.eventRepository.Get(eventID)
+	event, exists, err := h.eventRepository.Get(eventID)
 	if err != nil {
 		return err
 	}
@@ -215,7 +218,8 @@ func (h *UserHandler) EditBookingPaymentInit(c tele.Context) error {
 	if !exists {
 		return fmt.Errorf("Failed update user, user not exists")
 	}
-	return c.Send(message.EditBookingWaitInputPaymentMessage, message.EditBookingWaitInputPaymentReplyKeyboard)
+	content := message.EditBookingWaitInputPaymentMessageContent(event)
+	return c.Send(content[0], content[1:]...)
 }
 
 func (h *UserHandler) EditBookingPaymentInput(c tele.Context) error {
@@ -284,6 +288,9 @@ func (h *UserHandler) EditBookingPaymentInput(c tele.Context) error {
 		return err
 	}
 	content := message.EditBookingMessageContent(event, booking, filter)
+
+	time.Sleep(time.Second)
+
 	return c.Send(content[0], content[1:]...)
 }
 
@@ -391,5 +398,8 @@ func (h *UserHandler) EditBookingAdditionalInfoInput(c tele.Context) error {
 		return err
 	}
 	content := message.EditBookingMessageContent(event, booking, filter)
+
+	time.Sleep(time.Second)
+
 	return c.Send(content[0], content[1:]...)
 }

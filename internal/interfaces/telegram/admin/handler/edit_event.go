@@ -2,6 +2,7 @@ package handler
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/pdkonovalov/auditoria_bot/internal/domain/entity"
@@ -41,7 +42,18 @@ func (h *AdminHandler) EditEvent(c tele.Context) error {
 		}
 	}
 	eventURL := h.generateBotUrl(eventID)
-	content := message.EditEventMessageContent(event, createdBy, updatedBy, eventURL)
+
+	bookingsOffline, err := h.bookingRepository.GetByEventID(eventID, true, false)
+	if err != nil {
+		return fmt.Errorf("Failed get offline bookings: %s", err)
+	}
+
+	bookingsOnline, err := h.bookingRepository.GetByEventID(eventID, false, true)
+	if err != nil {
+		return fmt.Errorf("Failed get online bookings: %s", err)
+	}
+
+	content := message.EditEventMessageContent(event, createdBy, updatedBy, eventURL, len(bookingsOffline), len(bookingsOnline))
 	err = c.EditOrSend(content[0], content[1:]...)
 	if err != nil {
 		return c.Send(content[0], content[1:]...)
@@ -173,8 +185,21 @@ func (h *AdminHandler) EditEventFormatInput(c tele.Context) error {
 		return fmt.Errorf("Failed get created by, user not exists")
 	}
 
+	bookingsOffline, err := h.bookingRepository.GetByEventID(eventID, true, false)
+	if err != nil {
+		return fmt.Errorf("Failed get offline bookings: %s", err)
+	}
+
+	bookingsOnline, err := h.bookingRepository.GetByEventID(eventID, false, true)
+	if err != nil {
+		return fmt.Errorf("Failed get online bookings: %s", err)
+	}
+
 	eventURL := h.generateBotUrl(eventID)
-	content := message.EditEventMessageContent(event, createdBy, &user, eventURL)
+	content := message.EditEventMessageContent(event, createdBy, &user, eventURL, len(bookingsOffline), len(bookingsOnline))
+
+	time.Sleep(time.Second)
+
 	return c.Send(content[0], content[1:]...)
 }
 
@@ -292,8 +317,21 @@ func (h *AdminHandler) EditEventPaidInput(c tele.Context) error {
 		return fmt.Errorf("Failed get created by, user not exists")
 	}
 
+	bookingsOffline, err := h.bookingRepository.GetByEventID(eventID, true, false)
+	if err != nil {
+		return fmt.Errorf("Failed get offline bookings: %s", err)
+	}
+
+	bookingsOnline, err := h.bookingRepository.GetByEventID(eventID, false, true)
+	if err != nil {
+		return fmt.Errorf("Failed get online bookings: %s", err)
+	}
+
 	eventURL := h.generateBotUrl(eventID)
-	content := message.EditEventMessageContent(event, createdBy, &user, eventURL)
+	content := message.EditEventMessageContent(event, createdBy, &user, eventURL, len(bookingsOffline), len(bookingsOnline))
+
+	time.Sleep(time.Second)
+
 	return c.Send(content[0], content[1:]...)
 }
 
@@ -377,8 +415,21 @@ func (h *AdminHandler) EditEventTitleInput(c tele.Context) error {
 		return fmt.Errorf("Failed get created by, user not exists")
 	}
 
+	bookingsOffline, err := h.bookingRepository.GetByEventID(eventID, true, false)
+	if err != nil {
+		return fmt.Errorf("Failed get offline bookings: %s", err)
+	}
+
+	bookingsOnline, err := h.bookingRepository.GetByEventID(eventID, false, true)
+	if err != nil {
+		return fmt.Errorf("Failed get online bookings: %s", err)
+	}
+
 	eventURL := h.generateBotUrl(eventID)
-	content := message.EditEventMessageContent(event, createdBy, &user, eventURL)
+	content := message.EditEventMessageContent(event, createdBy, &user, eventURL, len(bookingsOffline), len(bookingsOnline))
+
+	time.Sleep(time.Second)
+
 	return c.Send(content[0], content[1:]...)
 }
 
@@ -467,8 +518,141 @@ func (h *AdminHandler) EditEventTimeInput(c tele.Context) error {
 		return fmt.Errorf("Failed get created by, user not exists")
 	}
 
+	bookingsOffline, err := h.bookingRepository.GetByEventID(eventID, true, false)
+	if err != nil {
+		return fmt.Errorf("Failed get offline bookings: %s", err)
+	}
+
+	bookingsOnline, err := h.bookingRepository.GetByEventID(eventID, false, true)
+	if err != nil {
+		return fmt.Errorf("Failed get online bookings: %s", err)
+	}
+
 	eventURL := h.generateBotUrl(eventID)
-	content := message.EditEventMessageContent(event, createdBy, &user, eventURL)
+	content := message.EditEventMessageContent(event, createdBy, &user, eventURL, len(bookingsOffline), len(bookingsOnline))
+
+	time.Sleep(time.Second)
+
+	return c.Send(content[0], content[1:]...)
+}
+
+func (h *AdminHandler) EditEventPaymentDetailsInit(c tele.Context) error {
+	user, ok := c.Get("user").(entity.User)
+	if !ok {
+		return fmt.Errorf("Failed get user from context")
+	}
+
+	eventID, ok := c.Get("eventID").(string)
+	if !ok {
+		return fmt.Errorf("Failed get event id from context")
+	}
+
+	event, exists, err := h.eventRepository.Get(eventID)
+	if err != nil {
+		return fmt.Errorf("Failed get event: %s", err)
+	}
+	if !exists {
+		return fmt.Errorf("Failed get event, event not exists")
+	}
+
+	if !event.OfflinePaid && !event.OnlinePaid {
+		return nil
+	}
+
+	user.State = state.EditEventWaitInputPaymentDetails
+	user.Context["eventID"] = eventID
+
+	exists, err = h.userRepository.Update(&user)
+	if err != nil {
+		return fmt.Errorf("Failed update user: %s", err)
+	}
+	if !exists {
+		return fmt.Errorf("Failed update user, user not exists")
+	}
+
+	return c.Send(message.WaitInputPaymentDetailsMessage, message.WaitInputPaymentDetailsReplyKeyboard(h.defaultPaymentDetails))
+}
+
+func (h *AdminHandler) EditEventPaymentDetailsInput(c tele.Context) error {
+	user, ok := c.Get("user").(entity.User)
+	if !ok {
+		return fmt.Errorf("Failed get user from context")
+	}
+
+	eventID, ok := user.Context["eventID"].(string)
+	if !ok {
+		return fmt.Errorf("Failed get event id from user context")
+	}
+	event, exists, err := h.eventRepository.Get(eventID)
+	if err != nil {
+		return fmt.Errorf("Failed get event: %s", err)
+	}
+	if !exists {
+		return fmt.Errorf("Failed get event, event not exists")
+	}
+
+	parts := strings.Split(c.Message().Text, " ")
+	if len(parts) != 3 ||
+		len(parts[0]) == 0 ||
+		len(parts[1]) == 0 ||
+		len(parts[2]) == 0 {
+		return c.Send(message.WaitInputPaymentDetailsInvalidInputMessage)
+	}
+
+	event.PaymentDetailsFirstName = parts[0]
+	event.PaymentDetailsLastName = parts[1]
+	event.PaymentDetailsAccount = parts[2]
+
+	timeNow := time.Now()
+	event.UpdatedAt = &timeNow
+	event.UpdatedBy = &user.UserID
+
+	exists, err = h.eventRepository.Update(event)
+	if err != nil {
+		return fmt.Errorf("Failed update event: %s", err)
+	}
+	if !exists {
+		return fmt.Errorf("Failed update event, event not exists")
+	}
+
+	user.State = state.Init
+	user.Context = make(map[string]any)
+	exists, err = h.userRepository.Update(&user)
+	if err != nil {
+		return fmt.Errorf("Failed update user: %s", err)
+	}
+	if !exists {
+		return fmt.Errorf("Failed update user, user not exists")
+	}
+
+	err = c.Send(message.EditEventSuccessMessage)
+	if err != nil {
+		return err
+	}
+
+	createdBy, exists, err := h.userRepository.Get(event.CreatedBy)
+	if err != nil {
+		return fmt.Errorf("Failed get created by: %s", err)
+	}
+	if !exists {
+		return fmt.Errorf("Failed get created by, user not exists")
+	}
+
+	bookingsOffline, err := h.bookingRepository.GetByEventID(eventID, true, false)
+	if err != nil {
+		return fmt.Errorf("Failed get offline bookings: %s", err)
+	}
+
+	bookingsOnline, err := h.bookingRepository.GetByEventID(eventID, false, true)
+	if err != nil {
+		return fmt.Errorf("Failed get online bookings: %s", err)
+	}
+
+	eventURL := h.generateBotUrl(eventID)
+	content := message.EditEventMessageContent(event, createdBy, &user, eventURL, len(bookingsOffline), len(bookingsOnline))
+
+	time.Sleep(time.Second)
+
 	return c.Send(content[0], content[1:]...)
 }
 
@@ -552,5 +736,8 @@ func (h *AdminHandler) EditEventPhotoTextInput(c tele.Context) error {
 		return err
 	}
 	content := message.EventPhotoTextMessageContent(event)
+
+	time.Sleep(time.Second)
+
 	return c.Send(content[0], content[1:]...)
 }

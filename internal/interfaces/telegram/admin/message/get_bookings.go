@@ -22,44 +22,33 @@ func GetBookingsMessageContent(
 	createdBy *entity.User,
 	updatedBy *entity.User,
 	url string,
-	getBookingsOffline bool,
-	getBookingsOnline bool,
+	bookingsOfflineCount int,
+	bookingsOnlineCount int,
 ) []any {
 	content := make([]any, 0)
-	content = append(content, eventMessage(event, createdBy, updatedBy, url)...)
-	content = append(content, getBookingsInlineKeyboard(event, getBookingsOffline, getBookingsOnline))
+	content = append(content, eventMessage(event, createdBy, updatedBy, url, bookingsOfflineCount, bookingsOnlineCount)...)
+	content = append(content, getBookingsInlineKeyboard(event))
 	return content
 }
 
 func getBookingsInlineKeyboard(
 	event *entity.Event,
-	getBookingsOffline bool,
-	getBookingsOnline bool,
 ) *tele.ReplyMarkup {
-	keyboard := make([][]tele.InlineButton, 0)
-	if getBookingsOffline {
-		keyboard = append(keyboard,
-			[]tele.InlineButton{
-				{
-					Text:   "Оффлайн",
-					Unique: callback.GetBookingsOffline,
-					Data:   event.EventID,
-				},
+	keyboard := [][]tele.InlineButton{
+		[]tele.InlineButton{
+			{
+				Text:   "Оффлайн",
+				Unique: callback.GetBookingsOffline,
+				Data:   event.EventID,
 			},
-		)
-	}
-	if getBookingsOnline {
-		keyboard = append(keyboard,
-			[]tele.InlineButton{
-				{
-					Text:   "Онлайн",
-					Unique: callback.GetBookingsOnline,
-					Data:   event.EventID,
-				},
+		},
+		[]tele.InlineButton{
+			{
+				Text:   "Онлайн",
+				Unique: callback.GetBookingsOnline,
+				Data:   event.EventID,
 			},
-		)
-	}
-	keyboard = append(keyboard,
+		},
 		[]tele.InlineButton{
 			{
 				Text:   "< Назад",
@@ -67,7 +56,7 @@ func getBookingsInlineKeyboard(
 				Data:   event.EventID,
 			},
 		},
-	)
+	}
 	return &tele.ReplyMarkup{InlineKeyboard: keyboard}
 }
 

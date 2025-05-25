@@ -17,14 +17,12 @@ func EventMessageContent(
 	createdBy *entity.User,
 	updatedBy *entity.User,
 	url string,
-	getBookingsOffline bool,
-	getBookingsOnline bool,
-	sendNotificationOffline bool,
-	sendNotificationOnline bool,
+	bookingsOfflineCount int,
+	bookingsOnlineCount int,
 ) []any {
 	content := make([]any, 0)
-	content = append(content, eventMessage(event, createdBy, updatedBy, url)...)
-	content = append(content, eventInlineKeyboard(event, getBookingsOffline, getBookingsOnline, sendNotificationOffline, sendNotificationOnline))
+	content = append(content, eventMessage(event, createdBy, updatedBy, url, bookingsOfflineCount, bookingsOnlineCount)...)
+	content = append(content, eventInlineKeyboard(event, bookingsOfflineCount, bookingsOnlineCount))
 	return content
 }
 
@@ -33,6 +31,8 @@ func eventMessage(
 	createdBy *entity.User,
 	updatedBy *entity.User,
 	url string,
+	bookingsOfflineCount int,
+	bookingsOnlineCount int,
 ) []any {
 	if event == nil {
 		return nil
@@ -130,6 +130,41 @@ func eventMessage(
 	parts = append(parts, fmt.Sprintf("%s %s\n", timeKey, timeValue))
 	curLen += len(utf16.Encode([]rune(parts[len(parts)-1])))
 
+	bookingsKey := "Кол-во записавшихся:"
+	var bookingsValue string
+	if event.Offline && event.Online ||
+		event.Offline && bookingsOnlineCount != 0 ||
+		event.Online && bookingsOfflineCount != 0 {
+		bookingsValue = fmt.Sprintf("офлайн - %v, онлайн - %v", bookingsOfflineCount, bookingsOnlineCount)
+	} else if event.Offline {
+		bookingsValue = fmt.Sprintf("%v", bookingsOfflineCount)
+	} else if event.Online {
+		bookingsValue = fmt.Sprintf("%v", bookingsOnlineCount)
+	}
+	entities = append(entities,
+		tele.MessageEntity{
+			Type:   tele.EntityBold,
+			Offset: curLen,
+			Length: len(utf16.Encode([]rune(bookingsKey))),
+		},
+	)
+	parts = append(parts, fmt.Sprintf("%s %s\n", bookingsKey, bookingsValue))
+	curLen += len(utf16.Encode([]rune(parts[len(parts)-1])))
+
+	if event.OfflinePaid || event.OnlinePaid {
+		paymentDetailsKey := "Реквизиты:"
+		paymentDetailsValue := fmt.Sprintf("%s %s %s", event.PaymentDetailsFirstName, event.PaymentDetailsLastName, event.PaymentDetailsAccount)
+		entities = append(entities,
+			tele.MessageEntity{
+				Type:   tele.EntityBold,
+				Offset: curLen,
+				Length: len(utf16.Encode([]rune(paymentDetailsKey))),
+			},
+		)
+		parts = append(parts, fmt.Sprintf("%s %s\n", paymentDetailsKey, paymentDetailsValue))
+		curLen += len(utf16.Encode([]rune(parts[len(parts)-1])))
+	}
+
 	if createdBy != nil {
 		createdKey := "Создано:"
 		createdValue := fmt.Sprintf(
@@ -190,10 +225,8 @@ func eventMessage(
 
 func eventInlineKeyboard(
 	event *entity.Event,
-	getBookingsOffline bool,
-	getBookingsOnline bool,
-	sendNotificationOffline bool,
-	sendNotificationOnline bool,
+	bookingsOfflineCount int,
+	bookingsOnlineCount int,
 ) *tele.ReplyMarkup {
 	keyboard := make([][]tele.InlineButton, 0)
 	keyboard = append(keyboard,
@@ -205,6 +238,8 @@ func eventInlineKeyboard(
 			},
 		},
 	)
+	getBookingsOffline := event.Offline || bookingsOfflineCount != 0
+	getBookingsOnline := event.Online || bookingsOnlineCount != 0
 	if getBookingsOffline && !getBookingsOnline {
 		keyboard = append(keyboard,
 			[]tele.InlineButton{
@@ -245,6 +280,8 @@ func eventInlineKeyboard(
 			},
 		},
 	)
+	sendNotificationOffline := getBookingsOffline
+	sendNotificationOnline := getBookingsOnline
 	if sendNotificationOffline && !sendNotificationOnline {
 		keyboard = append(keyboard,
 			[]tele.InlineButton{
