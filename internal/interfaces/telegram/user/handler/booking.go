@@ -134,10 +134,16 @@ func (h *UserHandler) BookingContactInfoInput(c tele.Context) error {
 			return err
 		}
 		content := message.SetContactInfoMessageContent(&user)
-		err = c.Send(content[0], content[1:]...)
+
+		time.Sleep(time.Second)
+
+		err = c.Send(content[0])
 		if err != nil {
 			return err
 		}
+
+		time.Sleep(time.Second)
+
 		return c.Send(message.EventNotFoundMessage)
 	}
 
@@ -206,10 +212,15 @@ func (h *UserHandler) BookingContactInfoInput(c tele.Context) error {
 		return err
 	}
 	content := message.SetContactInfoMessageContent(&user)
-	err = c.Send(content[0], content[1:]...)
+
+	time.Sleep(time.Second)
+
+	err = c.Send(content[0])
 	if err != nil {
 		return err
 	}
+
+	time.Sleep(time.Second)
 
 	switch user.State {
 	case state.BookingWaitInputFormat:
