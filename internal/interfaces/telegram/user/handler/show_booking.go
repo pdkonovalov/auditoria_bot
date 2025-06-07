@@ -18,7 +18,7 @@ func (h *UserHandler) ShowBooking(c tele.Context) error {
 	if !ok {
 		return fmt.Errorf("Failed get filter from context")
 	}
-	_, exists, err := h.eventRepository.Get(eventID)
+	event, exists, err := h.eventRepository.Get(eventID)
 	if err != nil {
 		return err
 	}
@@ -36,7 +36,7 @@ func (h *UserHandler) ShowBooking(c tele.Context) error {
 	if !isBooked {
 		return fmt.Errorf("Failed get booking, booking not exists")
 	}
-	content := message.ShowBookingMessageContent(booking, filter)
+	content := message.ShowBookingMessageContent(event, booking, filter)
 	err = c.EditOrSend(content[0], content[1:]...)
 	if err != nil {
 		return c.Send(content[0], content[1:]...)

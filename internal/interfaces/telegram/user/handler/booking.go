@@ -215,7 +215,7 @@ func (h *UserHandler) BookingContactInfoInput(c tele.Context) error {
 
 	time.Sleep(time.Second)
 
-	err = c.Send(content[0])
+	err = c.Send(content[0], content[1])
 	if err != nil {
 		return err
 	}
