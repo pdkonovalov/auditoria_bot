@@ -91,10 +91,12 @@ func setupRouter(
 		return fmt.Errorf("Failed create user handler: %s", err)
 	}
 
-	b.Handle(tele.OnText, route(adminHandler.OnTextPhoto, userHandler.OnTextPhoto))
-	b.Handle(tele.OnPhoto, route(adminHandler.OnTextPhoto, userHandler.OnTextPhoto))
+	b.Handle(tele.OnText, route(adminHandler.OnMessage, userHandler.OnMessage))
+	b.Handle(tele.OnPhoto, route(adminHandler.OnMessage, userHandler.OnMessage))
+	b.Handle(tele.OnContact, route(adminHandler.OnMessage, userHandler.OnMessage))
+	b.Handle(tele.OnDocument, route(adminHandler.OnMessage, userHandler.OnMessage))
+
 	b.Handle(tele.OnCallback, route(adminHandler.OnCallback, userHandler.OnCallback))
-	b.Handle(tele.OnContact, route(adminHandler.OnTextPhoto, userHandler.OnTextPhoto))
 
 	return nil
 }

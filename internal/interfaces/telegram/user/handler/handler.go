@@ -223,7 +223,7 @@ func (h *UserHandler) OnCallback(c tele.Context) error {
 	return fmt.Errorf("Unexpected callback unique: %s", unique)
 }
 
-func (h *UserHandler) OnTextPhoto(c tele.Context) error {
+func (h *UserHandler) OnMessage(c tele.Context) error {
 	user, ok := c.Get("user").(entity.User)
 	if !ok {
 		return fmt.Errorf("Failed get user from context")
