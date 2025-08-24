@@ -259,9 +259,15 @@ func (h *UserHandler) EditBookingPaymentInput(c tele.Context) error {
 		return fmt.Errorf("Failed get booking, booking not exists")
 	}
 	if c.Message().Photo != nil {
-		booking.Payment = c.Message().Photo
+		booking.Payment = true
+		booking.PaymentPhoto = c.Message().Photo
+		booking.PaymentDocument = nil
+	} else if c.Message().Document != nil {
+		booking.Payment = true
+		booking.PaymentPhoto = nil
+		booking.PaymentDocument = c.Message().Document
 	} else if c.Message().Text == message.BookingWaitInputPaymentReplyKeyboardText {
-		booking.Payment = nil
+		booking.Payment = false
 	} else {
 		return c.Send(message.BookingWaitInputPaymentInvalidInputMessage)
 	}
@@ -397,6 +403,7 @@ func (h *UserHandler) EditBookingAdditionalInfoInput(c tele.Context) error {
 	if err != nil {
 		return err
 	}
+
 	content := message.EditBookingMessageContent(event, booking, filter)
 
 	time.Sleep(time.Second)

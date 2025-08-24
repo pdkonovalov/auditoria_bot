@@ -35,21 +35,21 @@ func getBookingsInlineKeyboard(
 	event *entity.Event,
 ) *tele.ReplyMarkup {
 	keyboard := [][]tele.InlineButton{
-		[]tele.InlineButton{
+		{
 			{
 				Text:   "Оффлайн",
 				Unique: callback.GetBookingsOffline,
 				Data:   event.EventID,
 			},
 		},
-		[]tele.InlineButton{
+		{
 			{
 				Text:   "Онлайн",
 				Unique: callback.GetBookingsOnline,
 				Data:   event.EventID,
 			},
 		},
-		[]tele.InlineButton{
+		{
 			{
 				Text:   "< Назад",
 				Unique: callback.Event,
@@ -142,10 +142,20 @@ func BookingMessageContent(booking *entity.Booking, user *entity.User) []any {
 	curLen += len(utf16.Encode([]rune(parts[len(parts)-1])))
 
 	payment := "Оплата:"
-	if booking.Payment != nil {
-		parts = append(parts,
-			fmt.Sprintf("%s %s\n", payment, "скриншот"),
-		)
+	if booking.Payment {
+		if booking.PaymentPhoto != nil {
+			parts = append(parts,
+				fmt.Sprintf("%s %s\n", payment, "скриншот"),
+			)
+		} else if booking.PaymentDocument != nil {
+			parts = append(parts,
+				fmt.Sprintf("%s %s\n", payment, "документ"),
+			)
+		} else {
+			parts = append(parts,
+				fmt.Sprintf("%s %s\n", payment, "-"),
+			)
+		}
 	} else {
 		parts = append(parts,
 			fmt.Sprintf("%s %s\n", payment, "-"),
@@ -208,10 +218,22 @@ func BookingMessageContent(booking *entity.Booking, user *entity.User) []any {
 	}
 
 	text := strings.Join(parts, "")
-	if booking.Payment == nil {
+
+	if !booking.Payment {
 		return []any{text, entities}
 	}
-	photo := booking.Payment
-	photo.Caption = text
-	return []any{photo, entities}
+
+	if booking.PaymentPhoto != nil {
+		photo := booking.PaymentPhoto
+		photo.Caption = text
+		return []any{photo, entities}
+	}
+
+	if booking.PaymentDocument != nil {
+		document := booking.PaymentDocument
+		document.Caption = text
+		return []any{document, entities}
+	}
+
+	return []any{text, entities}
 }

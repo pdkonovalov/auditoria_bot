@@ -41,12 +41,22 @@ func ShowBookingMessageContent(event *entity.Event, booking *entity.Booking, fil
 
 	if booking.Offline && event.OfflinePaid ||
 		booking.Online && event.OnlinePaid ||
-		booking.Payment != nil {
+		booking.Payment {
 		payment := "Оплата:"
-		if booking.Payment != nil {
-			parts = append(parts,
-				fmt.Sprintf("%s %s\n", payment, "скриншот"),
-			)
+		if booking.Payment {
+			if booking.PaymentPhoto != nil {
+				parts = append(parts,
+					fmt.Sprintf("%s %s\n", payment, "скриншот"),
+				)
+			} else if booking.PaymentDocument != nil {
+				parts = append(parts,
+					fmt.Sprintf("%s %s\n", payment, "документ"),
+				)
+			} else {
+				parts = append(parts,
+					fmt.Sprintf("%s %s\n", payment, "-"),
+				)
+			}
 		} else {
 			parts = append(parts,
 				fmt.Sprintf("%s %s\n", payment, "-"),
@@ -82,12 +92,23 @@ func ShowBookingMessageContent(event *entity.Event, booking *entity.Booking, fil
 
 	text := strings.Join(parts, "")
 
-	if booking.Payment == nil {
+	if !booking.Payment {
 		return []any{text, entities, showBookingInlineKeyboard(booking, filter)}
 	}
-	photo := booking.Payment
-	photo.Caption = text
-	return []any{photo, entities, showBookingInlineKeyboard(booking, filter)}
+
+	if booking.PaymentPhoto != nil {
+		photo := booking.PaymentPhoto
+		photo.Caption = text
+		return []any{photo, entities, showBookingInlineKeyboard(booking, filter)}
+	}
+
+	if booking.PaymentDocument != nil {
+		document := booking.PaymentDocument
+		document.Caption = text
+		return []any{document, entities, showBookingInlineKeyboard(booking, filter)}
+	}
+
+	return []any{text, entities, showBookingInlineKeyboard(booking, filter)}
 }
 
 func showBookingInlineKeyboard(booking *entity.Booking, filter string) *tele.ReplyMarkup {

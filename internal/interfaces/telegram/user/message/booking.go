@@ -79,7 +79,7 @@ func BookingWaitInputPaymentMessageContent(event *entity.Event) []any {
 	entities := make(tele.Entities, 0)
 	curLen := 0
 
-	messageFirstPart := "Пришлите скриншот оплаты мероприятия.\n\nРеквизиты:\n"
+	messageFirstPart := "Пришлите подтверждение оплаты мероприятия в формате фото или pdf.\n\nРеквизиты:\n"
 	parts = append(parts, messageFirstPart)
 	curLen += len(utf16.Encode([]rune(parts[len(parts)-1])))
 
@@ -109,7 +109,7 @@ func BookingWaitInputPaymentMessageContent(event *entity.Event) []any {
 }
 
 const (
-	BookingWaitInputPaymentInvalidInputMessage = "Пришлите скриншот оплаты или укажите, что заплатите потом, с помощью кнопки снизу."
+	BookingWaitInputPaymentInvalidInputMessage = "Пришлите подтверждение оплаты или укажите, что заплатите потом, с помощью кнопки снизу."
 	BookingWaitInputPaymentReplyKeyboardText   = "Заплачу потом"
 )
 

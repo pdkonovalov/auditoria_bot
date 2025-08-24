@@ -45,13 +45,23 @@ func EditBookingMessageContent(event *entity.Event, booking *entity.Booking, fil
 	editPayment := false
 	if booking.Offline && event.OfflinePaid ||
 		booking.Online && event.OnlinePaid ||
-		booking.Payment != nil {
+		booking.Payment {
 		editPayment = true
 		payment := "Оплата:"
-		if booking.Payment != nil {
-			parts = append(parts,
-				fmt.Sprintf("%s %s\n", payment, "скриншот"),
-			)
+		if booking.Payment {
+			if booking.PaymentPhoto != nil {
+				parts = append(parts,
+					fmt.Sprintf("%s %s\n", payment, "скриншот"),
+				)
+			} else if booking.PaymentDocument != nil {
+				parts = append(parts,
+					fmt.Sprintf("%s %s\n", payment, "документ"),
+				)
+			} else {
+				parts = append(parts,
+					fmt.Sprintf("%s %s\n", payment, "-"),
+				)
+			}
 		} else {
 			parts = append(parts,
 				fmt.Sprintf("%s %s\n", payment, "-"),
@@ -87,12 +97,23 @@ func EditBookingMessageContent(event *entity.Event, booking *entity.Booking, fil
 
 	text := strings.Join(parts, "")
 
-	if booking.Payment == nil {
+	if !booking.Payment {
 		return []any{text, entities, editBookingInlineKeyboard(booking, filter, editFormat, editPayment)}
 	}
-	photo := booking.Payment
-	photo.Caption = text
-	return []any{photo, entities, editBookingInlineKeyboard(booking, filter, editFormat, editPayment)}
+
+	if booking.PaymentPhoto != nil {
+		photo := booking.PaymentPhoto
+		photo.Caption = text
+		return []any{photo, entities, editBookingInlineKeyboard(booking, filter, editFormat, editPayment)}
+	}
+
+	if booking.PaymentDocument != nil {
+		document := booking.PaymentDocument
+		document.Caption = text
+		return []any{document, entities, editBookingInlineKeyboard(booking, filter, editFormat, editPayment)}
+	}
+
+	return []any{text, entities, editBookingInlineKeyboard(booking, filter, editFormat, editPayment)}
 }
 
 func editBookingInlineKeyboard(
@@ -120,7 +141,7 @@ func editBookingInlineKeyboard(
 		keyboard = append(keyboard,
 			[]tele.InlineButton{
 				{
-					Text:   "Изменить скриншот оплаты",
+					Text:   "Изменить подтверждение оплаты",
 					Unique: callback.EditPayment,
 					Data: callback.Encode(map[string]string{
 						"eventID": booking.EventID,

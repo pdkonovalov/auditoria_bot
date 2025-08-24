@@ -80,7 +80,9 @@ func New(cfg *config.Config) (*pgxpool.Pool, error) {
 		create table if not exists bookings (
 		event_id text references events(event_id) on delete cascade,
 		user_id bigint references users(user_id) on delete cascade,
-		payment JSONB,
+		payment bool,
+		payment_photo jsonb,
+		payment_document jsonb,
 		text text,
 		offline bool,
 		online bool,

@@ -354,9 +354,13 @@ func (h *UserHandler) BookingPaymentInput(c tele.Context) error {
 	}
 
 	if c.Message().Photo != nil {
-		booking.Payment = c.Message().Photo
+		booking.Payment = true
+		booking.PaymentPhoto = c.Message().Photo
+	} else if c.Message().Document != nil {
+		booking.Payment = true
+		booking.PaymentDocument = c.Message().Document
 	} else if c.Message().Text == message.BookingWaitInputPaymentReplyKeyboardText {
-		booking.Payment = nil
+		booking.Payment = false
 	} else {
 		return c.Send(message.BookingWaitInputPaymentInvalidInputMessage)
 	}
@@ -455,6 +459,9 @@ func (h *UserHandler) BookingAdditionalInfoInput(c tele.Context) error {
 		return err
 	}
 
-	content := message.EventMessageContent(event, true, filter)
+	content := message.EditBookingMessageContent(event, booking, filter)
+
+	time.Sleep(time.Second)
+
 	return c.Send(content[0], content[1:]...)
 }

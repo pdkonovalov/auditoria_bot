@@ -7,13 +7,15 @@ import (
 )
 
 type Booking struct {
-	EventID   string
-	UserID    int64
-	Payment   *tele.Photo
-	Text      string
-	Offline   bool
-	Online    bool
-	CreatedAt time.Time
-	UpdatedAt *time.Time
-	Draft     bool
+	EventID         string
+	UserID          int64
+	Payment         bool
+	PaymentPhoto    *tele.Photo
+	PaymentDocument *tele.Document
+	Text            string
+	Offline         bool
+	Online          bool
+	CreatedAt       time.Time
+	UpdatedAt       *time.Time
+	Draft           bool
 }

@@ -33,10 +33,10 @@ func (r *repository) Create(b *entity.Booking) (bool, error) {
 	}
 	query =
 		`INSERT INTO bookings
-		(event_id, user_id, payment, text, offline, online, created_at, updated_at, draft)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`
+		(event_id, user_id, payment, payment_photo, payment_document, text, offline, online, created_at, updated_at, draft)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`
 	_, err = r.pool.Exec(context.Background(), query,
-		b.EventID, b.UserID, b.Payment, b.Text, b.Offline, b.Online, b.CreatedAt, b.UpdatedAt, b.Draft)
+		b.EventID, b.UserID, b.Payment, b.PaymentPhoto, b.PaymentDocument, b.Text, b.Offline, b.Online, b.CreatedAt, b.UpdatedAt, b.Draft)
 	return false, err
 }
 
@@ -55,7 +55,7 @@ func (r *repository) Get(userID int64, eventID string) (*entity.Booking, bool, e
 		return nil, false, nil
 	}
 	query =
-		`SELECT event_id, user_id, payment, text, offline, online, created_at, updated_at, draft
+		`SELECT event_id, user_id, payment, payment_photo, payment_document, text, offline, online, created_at, updated_at, draft
     	FROM bookings
     	WHERE user_id = $1 AND event_id = $2`
 	b := entity.Booking{}
@@ -63,6 +63,8 @@ func (r *repository) Get(userID int64, eventID string) (*entity.Booking, bool, e
 		&b.EventID,
 		&b.UserID,
 		&b.Payment,
+		&b.PaymentPhoto,
+		&b.PaymentDocument,
 		&b.Text,
 		&b.Offline,
 		&b.Online,
@@ -77,7 +79,7 @@ func (r *repository) Get(userID int64, eventID string) (*entity.Booking, bool, e
 }
 
 func (r *repository) GetByEventID(eventID string, offline, online bool) ([]*entity.Booking, error) {
-	var query = `SELECT event_id, user_id, payment, text, offline, online, created_at, updated_at, draft
+	var query = `SELECT event_id, user_id, payment, payment_photo, payment_document, text, offline, online, created_at, updated_at, draft
 	FROM bookings
 	WHERE event_id = $1 AND draft IS FALSE AND offline = $2 AND online = $3
 	ORDER BY COALESCE(updated_at, created_at) ASC`
@@ -90,7 +92,7 @@ func (r *repository) GetByEventID(eventID string, offline, online bool) ([]*enti
 	var bookings []*entity.Booking
 	for rows.Next() {
 		booking := &entity.Booking{}
-		err := rows.Scan(&booking.EventID, &booking.UserID, &booking.Payment, &booking.Text, &booking.Offline, &booking.Online, &booking.CreatedAt, &booking.UpdatedAt, &booking.Draft)
+		err := rows.Scan(&booking.EventID, &booking.UserID, &booking.Payment, &booking.PaymentPhoto, &booking.PaymentDocument, &booking.Text, &booking.Offline, &booking.Online, &booking.CreatedAt, &booking.UpdatedAt, &booking.Draft)
 		if err != nil {
 			return nil, err
 		}
@@ -101,9 +103,9 @@ func (r *repository) GetByEventID(eventID string, offline, online bool) ([]*enti
 }
 
 func (r *repository) GetByUserID(userID int64) ([]*entity.Booking, error) {
-	var query = `SELECT event_id, user_id, payment, text, offline, online, created_at, updated_at, draft
+	var query = `SELECT event_id, user_id, payment, payment_photo, payment_document, text, offline, online, created_at, updated_at, draft
 		FROM bookings
-		WHERE user_id = $1  AND draft IS FALSE
+		WHERE user_id = $1 AND draft IS FALSE
 		ORDER BY COALESCE(updated_at, created_at) ASC`
 	rows, err := r.pool.Query(context.Background(), query, userID)
 	if err != nil {
@@ -114,7 +116,7 @@ func (r *repository) GetByUserID(userID int64) ([]*entity.Booking, error) {
 	var bookings []*entity.Booking
 	for rows.Next() {
 		booking := &entity.Booking{}
-		err := rows.Scan(&booking.EventID, &booking.UserID, &booking.Payment, &booking.Text, &booking.Offline, &booking.Online, &booking.CreatedAt, &booking.UpdatedAt, &booking.Draft)
+		err := rows.Scan(&booking.EventID, &booking.UserID, &booking.Payment, &booking.PaymentPhoto, &booking.PaymentDocument, &booking.Text, &booking.Offline, &booking.Online, &booking.CreatedAt, &booking.UpdatedAt, &booking.Draft)
 		if err != nil {
 			return nil, err
 		}
@@ -142,17 +144,21 @@ func (r *repository) Update(b *entity.Booking) (bool, error) {
     	UPDATE bookings
     	SET 
 			payment = $3,
-			text =  $4,
-			offline = $5,
-			online = $6,
-			created_at = $7,
-			updated_at = $8,
-			draft = $9
+			payment_photo = $4,
+			payment_document = $5,
+			text =  $6,
+			offline = $7,
+			online = $8,
+			created_at = $9,
+			updated_at = $10,
+			draft = $11
     	WHERE event_id = $1 AND user_id = $2`
 	_, err = r.pool.Exec(context.Background(), query,
 		b.EventID,
 		b.UserID,
 		b.Payment,
+		b.PaymentPhoto,
+		b.PaymentDocument,
 		b.Text,
 		b.Offline,
 		b.Online,
