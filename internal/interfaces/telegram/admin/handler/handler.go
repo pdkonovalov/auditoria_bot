@@ -92,99 +92,176 @@ func (h *AdminHandler) OnCallback(c tele.Context) error {
 		return fmt.Errorf("Failed get callback data, callback data is empty")
 	}
 
+	data_decoded, err := callback.Decode(data)
+	if err != nil {
+		return fmt.Errorf("Failed decode callback data: %s", err)
+	}
+
 	switch unique {
 	// event button
 	case callback.Event:
-		c.Set("eventID", data)
+		eventID, ok := data_decoded["eventID"]
+		if !ok {
+			return fmt.Errorf("Failed get event id from callback data")
+		}
+		c.Set("eventID", eventID)
 		return h.Event(c)
 
 	// event photo text button
 	case callback.EventPhotoText:
-		c.Set("eventID", data)
+		eventID, ok := data_decoded["eventID"]
+		if !ok {
+			return fmt.Errorf("Failed get event id from callback data")
+		}
+		c.Set("eventID", eventID)
 		return h.EventPhotoText(c)
 
 	// date button
 	case callback.EventsByDate:
-		c.Set("date", data)
+		date, ok := data_decoded["date"]
+		if !ok {
+			return fmt.Errorf("Failed get date from callback data")
+		}
+		c.Set("date", date)
 		return h.EventsByDate(c)
 
 	// get bookings button
 	case callback.GetBookings:
-		c.Set("eventID", data)
+		eventID, ok := data_decoded["eventID"]
+		if !ok {
+			return fmt.Errorf("Failed get event id from callback data")
+		}
+		c.Set("eventID", eventID)
 		return h.GetBookings(c)
 
 	// get bookings offline button
 	case callback.GetBookingsOffline:
-		c.Set("eventID", data)
+		eventID, ok := data_decoded["eventID"]
+		if !ok {
+			return fmt.Errorf("Failed get event id from callback data")
+		}
+		c.Set("eventID", eventID)
 		return h.GetBookingsOffline(c)
 
 	// get bookings online button
 	case callback.GetBookingsOnline:
-		c.Set("eventID", data)
+		eventID, ok := data_decoded["eventID"]
+		if !ok {
+			return fmt.Errorf("Failed get event id from callback data")
+		}
+		c.Set("eventID", eventID)
 		return h.GetBookingsOnline(c)
 
 	// edit event button
 	case callback.EditEvent:
-		c.Set("eventID", data)
+		eventID, ok := data_decoded["eventID"]
+		if !ok {
+			return fmt.Errorf("Failed get event id from callback data")
+		}
+		c.Set("eventID", eventID)
 		return h.EditEvent(c)
 
 	// edit format button
 	case callback.EditFormat:
-		c.Set("eventID", data)
+		eventID, ok := data_decoded["eventID"]
+		if !ok {
+			return fmt.Errorf("Failed get event id from callback data")
+		}
+		c.Set("eventID", eventID)
 		return h.EditEventFormatInit(c)
 
 	// edit event offline paid button
 	case callback.EditOfflinePaid:
-		c.Set("eventID", data)
+		eventID, ok := data_decoded["eventID"]
+		if !ok {
+			return fmt.Errorf("Failed get event id from callback data")
+		}
+		c.Set("eventID", eventID)
 		c.Set("format", "offline")
 		return h.EditEventPaidInit(c)
 
 	// edit event online paid button
 	case callback.EditOnlinePaid:
-		c.Set("eventID", data)
+		eventID, ok := data_decoded["eventID"]
+		if !ok {
+			return fmt.Errorf("Failed get event id from callback data")
+		}
+		c.Set("eventID", eventID)
 		c.Set("format", "online")
 		return h.EditEventPaidInit(c)
 
 	// edit event title button
 	case callback.EditTitle:
-		c.Set("eventID", data)
+		eventID, ok := data_decoded["eventID"]
+		if !ok {
+			return fmt.Errorf("Failed get event id from callback data")
+		}
+		c.Set("eventID", eventID)
 		return h.EditEventTitleInit(c)
 
 	// edit event time button
 	case callback.EditTime:
-		c.Set("eventID", data)
+		eventID, ok := data_decoded["eventID"]
+		if !ok {
+			return fmt.Errorf("Failed get event id from callback data")
+		}
+		c.Set("eventID", eventID)
 		return h.EditEventTimeInit(c)
 
 	// edit event payment details button
 	case callback.EditPaymentDetails:
-		c.Set("eventID", data)
+		eventID, ok := data_decoded["eventID"]
+		if !ok {
+			return fmt.Errorf("Failed get event id from callback data")
+		}
+		c.Set("eventID", eventID)
 		return h.EditEventPaymentDetailsInit(c)
 
 	// edit event photo and text button
 	case callback.EditPhotoText:
-		c.Set("eventID", data)
+		eventID, ok := data_decoded["eventID"]
+		if !ok {
+			return fmt.Errorf("Failed get event id from callback data")
+		}
+		c.Set("eventID", eventID)
 		return h.EditEventPhotoTextInit(c)
 
 	// send notification button
 	case callback.SendNotification:
-		c.Set("eventID", data)
+		eventID, ok := data_decoded["eventID"]
+		if !ok {
+			return fmt.Errorf("Failed get event id from callback data")
+		}
+		c.Set("eventID", eventID)
 		return h.SendNotification(c)
 
 	// send notification offline button
 	case callback.SendNotificationOffline:
-		c.Set("eventID", data)
+		eventID, ok := data_decoded["eventID"]
+		if !ok {
+			return fmt.Errorf("Failed get event id from callback data")
+		}
+		c.Set("eventID", eventID)
 		c.Set("format", "offline")
 		return h.SendNotificationInit(c)
 
 		// send notification online button
 	case callback.SendNotificationOnline:
-		c.Set("eventID", data)
+		eventID, ok := data_decoded["eventID"]
+		if !ok {
+			return fmt.Errorf("Failed get event id from callback data")
+		}
+		c.Set("eventID", eventID)
 		c.Set("format", "online")
 		return h.SendNotificationInit(c)
 
 	// delete event button
 	case callback.DeleteEvent:
-		c.Set("eventID", data)
+		eventID, ok := data_decoded["eventID"]
+		if !ok {
+			return fmt.Errorf("Failed get event id from callback data")
+		}
+		c.Set("eventID", eventID)
 		return h.DeleteEventInit(c)
 	}
 

@@ -234,7 +234,9 @@ func eventInlineKeyboard(
 			{
 				Text:   "Пост",
 				Unique: callback.EventPhotoText,
-				Data:   event.EventID,
+				Data: callback.Encode(map[string]string{
+					"eventID": event.EventID,
+				}),
 			},
 		},
 	)
@@ -246,7 +248,9 @@ func eventInlineKeyboard(
 				{
 					Text:   "Список записавшихся",
 					Unique: callback.GetBookingsOffline,
-					Data:   event.EventID,
+					Data: callback.Encode(map[string]string{
+						"eventID": event.EventID,
+					}),
 				},
 			},
 		)
@@ -256,7 +260,9 @@ func eventInlineKeyboard(
 				{
 					Text:   "Список записавшихся",
 					Unique: callback.GetBookingsOnline,
-					Data:   event.EventID,
+					Data: callback.Encode(map[string]string{
+						"eventID": event.EventID,
+					}),
 				},
 			},
 		)
@@ -266,7 +272,9 @@ func eventInlineKeyboard(
 				{
 					Text:   "Список записавшихся",
 					Unique: callback.GetBookings,
-					Data:   event.EventID,
+					Data: callback.Encode(map[string]string{
+						"eventID": event.EventID,
+					}),
 				},
 			},
 		)
@@ -276,7 +284,9 @@ func eventInlineKeyboard(
 			{
 				Text:   "Редактировать",
 				Unique: callback.EditEvent,
-				Data:   event.EventID,
+				Data: callback.Encode(map[string]string{
+					"eventID": event.EventID,
+				}),
 			},
 		},
 	)
@@ -288,7 +298,9 @@ func eventInlineKeyboard(
 				{
 					Text:   "Отправить уведомление",
 					Unique: callback.SendNotificationOffline,
-					Data:   event.EventID,
+					Data: callback.Encode(map[string]string{
+						"eventID": event.EventID,
+					}),
 				},
 			},
 		)
@@ -298,7 +310,9 @@ func eventInlineKeyboard(
 				{
 					Text:   "Отправить уведомление",
 					Unique: callback.SendNotificationOnline,
-					Data:   event.EventID,
+					Data: callback.Encode(map[string]string{
+						"eventID": event.EventID,
+					}),
 				},
 			},
 		)
@@ -308,7 +322,9 @@ func eventInlineKeyboard(
 				{
 					Text:   "Отправить уведомление",
 					Unique: callback.SendNotification,
-					Data:   event.EventID,
+					Data: callback.Encode(map[string]string{
+						"eventID": event.EventID,
+					}),
 				},
 			},
 		)
@@ -318,14 +334,18 @@ func eventInlineKeyboard(
 			{
 				Text:   "Удалить",
 				Unique: callback.DeleteEvent,
-				Data:   event.EventID,
+				Data: callback.Encode(map[string]string{
+					"eventID": event.EventID,
+				}),
 			},
 		},
 		[]tele.InlineButton{
 			{
 				Text:   fmt.Sprintf("< Мероприятия %s", russian_time.DayMonth(&event.Time, russian_time.RCase2)),
 				Unique: callback.EventsByDate,
-				Data:   event.Time.Format("02.01.2006"),
+				Data: callback.Encode(map[string]string{
+					"date": event.Time.Format("02.01.2006"),
+				}),
 			},
 		},
 	)

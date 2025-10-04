@@ -39,21 +39,27 @@ func getBookingsInlineKeyboard(
 			{
 				Text:   "Оффлайн",
 				Unique: callback.GetBookingsOffline,
-				Data:   event.EventID,
+				Data: callback.Encode(map[string]string{
+					"eventID": event.EventID,
+				}),
 			},
 		},
 		{
 			{
 				Text:   "Онлайн",
 				Unique: callback.GetBookingsOnline,
-				Data:   event.EventID,
+				Data: callback.Encode(map[string]string{
+					"eventID": event.EventID,
+				}),
 			},
 		},
 		{
 			{
 				Text:   "< Назад",
 				Unique: callback.Event,
-				Data:   event.EventID,
+				Data: callback.Encode(map[string]string{
+					"eventID": event.EventID,
+				}),
 			},
 		},
 	}

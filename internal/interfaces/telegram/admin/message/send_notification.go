@@ -24,25 +24,31 @@ func sendNotificationInlineKeyboard(
 	event *entity.Event,
 ) *tele.ReplyMarkup {
 	keyboard := [][]tele.InlineButton{
-		[]tele.InlineButton{
+		{
 			{
 				Text:   "Записавшимся оффлайн",
 				Unique: callback.SendNotificationOffline,
-				Data:   event.EventID,
+				Data: callback.Encode(map[string]string{
+					"eventID": event.EventID,
+				}),
 			},
 		},
-		[]tele.InlineButton{
+		{
 			{
 				Text:   "Записавшимся онлайн",
 				Unique: callback.SendNotificationOnline,
-				Data:   event.EventID,
+				Data: callback.Encode(map[string]string{
+					"eventID": event.EventID,
+				}),
 			},
 		},
-		[]tele.InlineButton{
+		{
 			{
 				Text:   "< Назад",
 				Unique: callback.Event,
-				Data:   event.EventID,
+				Data: callback.Encode(map[string]string{
+					"eventID": event.EventID,
+				}),
 			},
 		},
 	}

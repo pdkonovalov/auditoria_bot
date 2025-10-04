@@ -42,7 +42,9 @@ func eventsByDateInlineKeyboard(
 			{
 				Text:   fmt.Sprintf("%s %s", event.Time.Format("15:04"), event.Title),
 				Unique: callback.Event,
-				Data:   event.EventID,
+				Data: callback.Encode(map[string]string{
+					"eventID": event.EventID,
+				}),
 			},
 		}
 	}
@@ -56,7 +58,9 @@ func eventsByDateInlineKeyboard(
 			tele.InlineButton{
 				Text:   fmt.Sprintf("< %s", russian_time.DayMonth(&time, russian_time.RCase2)),
 				Unique: callback.EventsByDate,
-				Data:   *prevDate,
+				Data: callback.Encode(map[string]string{
+					"date": *prevDate,
+				}),
 			},
 		)
 	}
@@ -69,7 +73,9 @@ func eventsByDateInlineKeyboard(
 			tele.InlineButton{
 				Text:   fmt.Sprintf("%s >", russian_time.DayMonth(&time, russian_time.RCase2)),
 				Unique: callback.EventsByDate,
-				Data:   *nextDate,
+				Data: callback.Encode(map[string]string{
+					"date": *nextDate,
+				}),
 			},
 		)
 	}

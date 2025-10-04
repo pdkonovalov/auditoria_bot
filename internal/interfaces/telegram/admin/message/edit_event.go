@@ -28,7 +28,9 @@ func editEventInlineKeyboard(event *entity.Event) *tele.ReplyMarkup {
 			{
 				Text:   "Редактировать формат",
 				Unique: callback.EditFormat,
-				Data:   event.EventID,
+				Data: callback.Encode(map[string]string{
+					"eventID": event.EventID,
+				}),
 			},
 		},
 	)
@@ -38,7 +40,9 @@ func editEventInlineKeyboard(event *entity.Event) *tele.ReplyMarkup {
 				{
 					Text:   "Редактировать тип",
 					Unique: callback.EditOfflinePaid,
-					Data:   event.EventID,
+					Data: callback.Encode(map[string]string{
+						"eventID": event.EventID,
+					}),
 				},
 			},
 		)
@@ -48,7 +52,9 @@ func editEventInlineKeyboard(event *entity.Event) *tele.ReplyMarkup {
 				{
 					Text:   "Редактировать тип",
 					Unique: callback.EditOnlinePaid,
-					Data:   event.EventID,
+					Data: callback.Encode(map[string]string{
+						"eventID": event.EventID,
+					}),
 				},
 			},
 		)
@@ -58,14 +64,18 @@ func editEventInlineKeyboard(event *entity.Event) *tele.ReplyMarkup {
 				{
 					Text:   "Редактировать тип оффлайн",
 					Unique: callback.EditOfflinePaid,
-					Data:   event.EventID,
+					Data: callback.Encode(map[string]string{
+						"eventID": event.EventID,
+					}),
 				},
 			},
 			[]tele.InlineButton{
 				{
 					Text:   "Редактировать тип онлайн",
 					Unique: callback.EditOnlinePaid,
-					Data:   event.EventID,
+					Data: callback.Encode(map[string]string{
+						"eventID": event.EventID,
+					}),
 				},
 			},
 		)
@@ -75,14 +85,18 @@ func editEventInlineKeyboard(event *entity.Event) *tele.ReplyMarkup {
 			{
 				Text:   "Редактировать название",
 				Unique: callback.EditTitle,
-				Data:   event.EventID,
+				Data: callback.Encode(map[string]string{
+					"eventID": event.EventID,
+				}),
 			},
 		},
 		[]tele.InlineButton{
 			{
 				Text:   "Редактировать время начала",
 				Unique: callback.EditTime,
-				Data:   event.EventID,
+				Data: callback.Encode(map[string]string{
+					"eventID": event.EventID,
+				}),
 			},
 		},
 	)
@@ -92,7 +106,9 @@ func editEventInlineKeyboard(event *entity.Event) *tele.ReplyMarkup {
 				{
 					Text:   "Редактировать реквизиты",
 					Unique: callback.EditPaymentDetails,
-					Data:   event.EventID,
+					Data: callback.Encode(map[string]string{
+						"eventID": event.EventID,
+					}),
 				},
 			},
 		)
@@ -102,14 +118,18 @@ func editEventInlineKeyboard(event *entity.Event) *tele.ReplyMarkup {
 			{
 				Text:   "Редактировать пост",
 				Unique: callback.EditPhotoText,
-				Data:   event.EventID,
+				Data: callback.Encode(map[string]string{
+					"eventID": event.EventID,
+				}),
 			},
 		},
 		[]tele.InlineButton{
 			{
 				Text:   "< Назад",
 				Unique: callback.Event,
-				Data:   event.EventID,
+				Data: callback.Encode(map[string]string{
+					"eventID": event.EventID,
+				}),
 			},
 		},
 	)

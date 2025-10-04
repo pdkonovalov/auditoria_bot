@@ -81,7 +81,13 @@ func (h *UserHandler) OnCallback(c tele.Context) error {
 	if len(unique) == 0 {
 		return fmt.Errorf("Failed get callback unique, callback unique is empty")
 	}
-	data, _ := c.Get("callback_data").(string)
+	data, ok := c.Get("callback_data").(string)
+	if !ok {
+		return fmt.Errorf("Failed get callback data from context")
+	}
+	if len(unique) == 0 {
+		return fmt.Errorf("Failed get callback data, callback data is empty")
+	}
 
 	data_decoded, err := callback.Decode(data)
 	if err != nil {

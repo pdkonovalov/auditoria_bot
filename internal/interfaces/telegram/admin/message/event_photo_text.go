@@ -22,7 +22,9 @@ func eventPhotoTextInlineKeyboard(event *entity.Event) *tele.ReplyMarkup {
 			{
 				Text:   "< Назад",
 				Unique: callback.Event,
-				Data:   event.EventID,
+				Data: callback.Encode(map[string]string{
+					"eventID": event.EventID,
+				}),
 			},
 		},
 	}
