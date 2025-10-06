@@ -67,32 +67,32 @@ func eventMessage(
 		if event.OfflinePaid {
 			typeValue = "платное"
 		} else {
-			typeValue = "бестплатное"
+			typeValue = "бесплатное"
 		}
 	} else if !event.Offline && event.Online {
 		if event.OnlinePaid {
 			typeValue = "платное"
 		} else {
-			typeValue = "бестплатное"
+			typeValue = "бесплатное"
 		}
 	} else if event.OfflinePaid == event.OnlinePaid {
 		if event.OfflinePaid {
 			typeValue = "платное"
 		} else {
-			typeValue = "бестплатное"
+			typeValue = "бесплатное"
 		}
 	} else {
 		var typeOfflineValue string
 		if event.OfflinePaid {
 			typeOfflineValue = "платно"
 		} else {
-			typeOfflineValue = "бестплатно"
+			typeOfflineValue = "бесплатно"
 		}
 		var typeOnlineValue string
 		if event.OnlinePaid {
 			typeOnlineValue = "платно"
 		} else {
-			typeOnlineValue = "бестплатно"
+			typeOnlineValue = "бесплатно"
 		}
 		typeValue = fmt.Sprintf("офлайн - %s, онлайн - %s", typeOfflineValue, typeOnlineValue)
 	}
@@ -247,9 +247,11 @@ func eventInlineKeyboard(
 			[]tele.InlineButton{
 				{
 					Text:   "Список записавшихся",
-					Unique: callback.GetBookingsOffline,
+					Unique: callback.ShowBookings,
 					Data: callback.Encode(map[string]string{
 						"eventID": event.EventID,
+						"format":  "offline",
+						"page":    "0",
 					}),
 				},
 			},
@@ -259,9 +261,11 @@ func eventInlineKeyboard(
 			[]tele.InlineButton{
 				{
 					Text:   "Список записавшихся",
-					Unique: callback.GetBookingsOnline,
+					Unique: callback.ShowBookings,
 					Data: callback.Encode(map[string]string{
 						"eventID": event.EventID,
+						"format":  "online",
+						"page":    "0",
 					}),
 				},
 			},
@@ -271,7 +275,7 @@ func eventInlineKeyboard(
 			[]tele.InlineButton{
 				{
 					Text:   "Список записавшихся",
-					Unique: callback.GetBookings,
+					Unique: callback.ShowBookingsFormatSelection,
 					Data: callback.Encode(map[string]string{
 						"eventID": event.EventID,
 					}),
@@ -297,9 +301,10 @@ func eventInlineKeyboard(
 			[]tele.InlineButton{
 				{
 					Text:   "Отправить уведомление",
-					Unique: callback.SendNotificationOffline,
+					Unique: callback.SendNotification,
 					Data: callback.Encode(map[string]string{
 						"eventID": event.EventID,
+						"format":  "offline",
 					}),
 				},
 			},
@@ -309,9 +314,10 @@ func eventInlineKeyboard(
 			[]tele.InlineButton{
 				{
 					Text:   "Отправить уведомление",
-					Unique: callback.SendNotificationOnline,
+					Unique: callback.SendNotification,
 					Data: callback.Encode(map[string]string{
 						"eventID": event.EventID,
+						"format":  "online",
 					}),
 				},
 			},
@@ -321,7 +327,7 @@ func eventInlineKeyboard(
 			[]tele.InlineButton{
 				{
 					Text:   "Отправить уведомление",
-					Unique: callback.SendNotification,
+					Unique: callback.SendNotificationFormatSelection,
 					Data: callback.Encode(map[string]string{
 						"eventID": event.EventID,
 					}),

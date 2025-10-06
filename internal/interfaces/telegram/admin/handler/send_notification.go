@@ -11,7 +11,7 @@ import (
 	tele "gopkg.in/telebot.v4"
 )
 
-func (h *AdminHandler) SendNotification(c tele.Context) error {
+func (h *AdminHandler) SendNotificationFormatSelection(c tele.Context) error {
 	eventID, ok := c.Get("eventID").(string)
 	if !ok {
 		return fmt.Errorf("Failed get event id from context")
@@ -52,7 +52,7 @@ func (h *AdminHandler) SendNotification(c tele.Context) error {
 		return fmt.Errorf("Failed get online bookings: %s", err)
 	}
 
-	content := message.SendNotificationMessageContent(
+	content := message.SendNotificationFormatSelectionMessageContent(
 		event,
 		createdBy,
 		updatedBy,

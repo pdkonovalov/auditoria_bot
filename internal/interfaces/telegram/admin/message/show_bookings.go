@@ -17,7 +17,7 @@ const (
 	BookingsOnlineNotFoundMessage  = "На онлайн мероприятие пока никто не записался."
 )
 
-func GetBookingsMessageContent(
+func ShowBookingsFormatSelectionMessageContent(
 	event *entity.Event,
 	createdBy *entity.User,
 	updatedBy *entity.User,
@@ -27,29 +27,33 @@ func GetBookingsMessageContent(
 ) []any {
 	content := make([]any, 0)
 	content = append(content, eventMessage(event, createdBy, updatedBy, url, bookingsOfflineCount, bookingsOnlineCount)...)
-	content = append(content, getBookingsInlineKeyboard(event))
+	content = append(content, showBookingsFormatSelectionInlineKeyboard(event))
 	return content
 }
 
-func getBookingsInlineKeyboard(
+func showBookingsFormatSelectionInlineKeyboard(
 	event *entity.Event,
 ) *tele.ReplyMarkup {
 	keyboard := [][]tele.InlineButton{
 		{
 			{
 				Text:   "Оффлайн",
-				Unique: callback.GetBookingsOffline,
+				Unique: callback.ShowBookings,
 				Data: callback.Encode(map[string]string{
 					"eventID": event.EventID,
+					"format":  "offline",
+					"page":    "0",
 				}),
 			},
 		},
 		{
 			{
 				Text:   "Онлайн",
-				Unique: callback.GetBookingsOnline,
+				Unique: callback.ShowBookings,
 				Data: callback.Encode(map[string]string{
 					"eventID": event.EventID,
+					"format":  "online",
+					"page":    "0",
 				}),
 			},
 		},
@@ -66,7 +70,140 @@ func getBookingsInlineKeyboard(
 	return &tele.ReplyMarkup{InlineKeyboard: keyboard}
 }
 
-func BookingMessageContent(booking *entity.Booking, user *entity.User) []any {
+func ShowBookingsMessageContent(
+	event *entity.Event,
+	page int,
+	bookingsUsers []*entity.User,
+	prevBookingsExists bool,
+	nextBookingsExists bool,
+	bookingsOfflineExists bool,
+	bookingsOnlineExists bool,
+	format string,
+) []any {
+	var text string
+	if format == "offline" && (event.Online || bookingsOnlineExists) {
+		text = "Список записавшихся оффлайн"
+	} else if format == "online" && (event.Offline || bookingsOfflineExists) {
+		text = "Список записавшихся онлайн"
+	} else {
+		format = "Список записавшихся"
+	}
+
+	return []any{
+		text,
+		showBookingsInlineKeyboard(
+			event,
+			page,
+			bookingsUsers,
+			prevBookingsExists,
+			nextBookingsExists,
+			bookingsOfflineExists,
+			bookingsOnlineExists,
+			format,
+		),
+	}
+
+}
+
+func showBookingsInlineKeyboard(
+	event *entity.Event,
+	page int,
+	bookingsUsers []*entity.User,
+	prevBookingsExists bool,
+	nextBookingsExists bool,
+	bookingsOfflineExists bool,
+	bookingsOnlineExists bool,
+	format string,
+) *tele.ReplyMarkup {
+	keyboard := make([][]tele.InlineButton, 0)
+	for _, user := range bookingsUsers {
+		keyboard = append(keyboard,
+			[]tele.InlineButton{
+				{
+					Text:   fmt.Sprintf("%s %s", user.FirstName, user.LastName),
+					Unique: callback.Booking,
+					Data: callback.Encode(map[string]string{
+						"eventID": event.EventID,
+						"userID":  fmt.Sprintf("%v", user.UserID),
+					}),
+				},
+			},
+		)
+	}
+	if prevBookingsExists || nextBookingsExists {
+		navigationRow := make([]tele.InlineButton, 0)
+		if prevBookingsExists {
+			navigationRow = append(navigationRow, tele.InlineButton{
+				Text:   "<",
+				Unique: callback.ShowBookings,
+				Data: callback.Encode(map[string]string{
+					"eventID": event.EventID,
+					"format":  format,
+					"page":    fmt.Sprintf("%v", page-1),
+				}),
+			})
+		}
+		if nextBookingsExists {
+			navigationRow = append(navigationRow, tele.InlineButton{
+				Text:   ">",
+				Unique: callback.ShowBookings,
+				Data: callback.Encode(map[string]string{
+					"eventID": event.EventID,
+					"format":  format,
+					"page":    fmt.Sprintf("%v", page+1),
+				}),
+			})
+		}
+		keyboard = append(keyboard, navigationRow)
+	}
+	if (event.Offline || bookingsOfflineExists) &&
+		(event.Online || bookingsOnlineExists) {
+		keyboard = append(keyboard,
+			[]tele.InlineButton{
+				{
+					Text:   "< Назад",
+					Unique: callback.ShowBookingsFormatSelection,
+					Data: callback.Encode(map[string]string{
+						"eventID": event.EventID,
+					}),
+				},
+			},
+		)
+	} else {
+		keyboard = append(keyboard,
+			[]tele.InlineButton{
+				{
+					Text:   "< Назад",
+					Unique: callback.Event,
+					Data: callback.Encode(map[string]string{
+						"eventID": event.EventID,
+					}),
+				},
+			},
+		)
+	}
+	return &tele.ReplyMarkup{InlineKeyboard: keyboard}
+}
+
+func BookingMessageContent(
+	booking *entity.Booking,
+	user *entity.User,
+	page int,
+) []any {
+	content := make([]any, 0)
+	content = append(content,
+		bookingMessage(booking, user)...,
+	)
+	content = append(content,
+		bookingInlineKeyboard(booking, page),
+	)
+	return content
+}
+
+func bookingMessage(
+	booking *entity.Booking,
+	user *entity.User,
+) []any {
 	parts := make([]string, 0)
 	entities := make(tele.Entities, 0)
 	curLen := 0
@@ -242,4 +379,31 @@ func BookingMessageContent(booking *entity.Booking, user *entity.User) []any {
 	}
 
 	return []any{text, entities}
+}
+
+func bookingInlineKeyboard(
+	booking *entity.Booking,
+	page int,
+) *tele.ReplyMarkup {
+	keyboard := make([][]tele.InlineButton, 0)
+	var format string
+	if booking.Offline {
+		format = "offline"
+	} else {
+		format = "online"
+	}
+	keyboard = append(keyboard,
+		[]tele.InlineButton{
+			{
+				Text:   "< Назад",
+				Unique: callback.ShowBookings,
+				Data: callback.Encode(map[string]string{
+					"eventID": booking.EventID,
+					"page":    fmt.Sprintf("%v", page),
+					"format":  format,
+				}),
+			},
+		},
+	)
+	return &tele.ReplyMarkup{InlineKeyboard: keyboard}
 }

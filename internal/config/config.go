@@ -90,6 +90,7 @@ type Config struct {
 	TelegramBotAdminList             AdminList          `yaml:"TelegramBotAdminList" env:"TELEGRAM_BOT_ADMIN_LIST"`
 	TelegramBotTimezone              string             `yaml:"TelegramBotTimezone" env:"TELEGRAM_BOT_TIMEZONE"`
 	TelegramBotDefaultPaymentDetails PaymentDetailsList `yaml:"TelegramBotDefaultPaymentDetails" env:"TELEGRAM_BOT_DEFAULT_PAYMENT_DETAILS"`
+	TelegramBotBookingsPerPage       int                `yaml:"TelegramBotBookingsPerPage" env:"TELEGRAM_BOT_BOOKINGS_PER_PAGE"`
 
 	PostgresUser     string `yaml:"PostgresUser" env:"POSTGRES_USER"`
 	PostgresPassword string `yaml:"PostgresPassword" env:"POSTGRES_PASSWORD"`
@@ -115,6 +116,10 @@ func New() (*Config, error) {
 
 	if cfg.LogLevel != LogLevelDebug && cfg.LogLevel != LogLevelProd {
 		return nil, fmt.Errorf("Invalid LogLevel config variable value: '%s', must be %s or %s", cfg.LogLevel, LogLevelDebug, LogLevelProd)
+	}
+
+	if cfg.TelegramBotBookingsPerPage <= 0 {
+		return nil, fmt.Errorf("Invalid TelegramBotBookingsPerPage config variable value: '%v', must be greater than 0", cfg.TelegramBotBookingsPerPage)
 	}
 
 	return &cfg, nil

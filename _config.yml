@@ -17,6 +17,7 @@ TelegramBotDefaultPaymentDetails:
   - Account: 
     FirstName: 
     LastName: 
+TelegramBotBookingsPerPage: # 5
 
 PostgresUser: 
 PostgresPassword: 

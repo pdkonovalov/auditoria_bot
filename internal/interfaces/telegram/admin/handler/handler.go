@@ -25,6 +25,8 @@ type AdminHandler struct {
 	location *time.Location
 
 	defaultPaymentDetails config.PaymentDetailsList
+
+	bookingsPerPage int
 }
 
 func NewAdminHandler(
@@ -44,6 +46,7 @@ func NewAdminHandler(
 		bookingRepository:     bookingRepository,
 		location:              location,
 		defaultPaymentDetails: cfg.TelegramBotDefaultPaymentDetails,
+		bookingsPerPage:       cfg.TelegramBotBookingsPerPage,
 	}, nil
 }
 
@@ -125,32 +128,47 @@ func (h *AdminHandler) OnCallback(c tele.Context) error {
 		c.Set("date", date)
 		return h.EventsByDate(c)
 
-	// get bookings button
-	case callback.GetBookings:
+	// show bookings format selection button
+	case callback.ShowBookingsFormatSelection:
 		eventID, ok := data_decoded["eventID"]
 		if !ok {
 			return fmt.Errorf("Failed get event id from callback data")
 		}
 		c.Set("eventID", eventID)
-		return h.GetBookings(c)
+		return h.ShowBookingsFormatSelection(c)
 
-	// get bookings offline button
-	case callback.GetBookingsOffline:
+	// show bookings button
+	case callback.ShowBookings:
 		eventID, ok := data_decoded["eventID"]
 		if !ok {
 			return fmt.Errorf("Failed get event id from callback data")
 		}
 		c.Set("eventID", eventID)
-		return h.GetBookingsOffline(c)
+		format, ok := data_decoded["format"]
+		if !ok {
+			return fmt.Errorf("Failed get format from callback data")
+		}
+		c.Set("format", format)
+		page, ok := data_decoded["page"]
+		if !ok {
+			return fmt.Errorf("Failed get page from callback data")
+		}
+		c.Set("page", page)
+		return h.ShowBookings(c)
 
-	// get bookings online button
-	case callback.GetBookingsOnline:
+	// booking button
+	case callback.Booking:
 		eventID, ok := data_decoded["eventID"]
 		if !ok {
 			return fmt.Errorf("Failed get event id from callback data")
 		}
 		c.Set("eventID", eventID)
-		return h.GetBookingsOnline(c)
+		userID, ok := data_decoded["userID"]
+		if !ok {
+			return fmt.Errorf("Failed get user id from callback data")
+		}
+		c.Set("userID", userID)
+		return h.Booking(c)
 
 	// edit event button
 	case callback.EditEvent:
@@ -227,32 +245,26 @@ func (h *AdminHandler) OnCallback(c tele.Context) error {
 		return h.EditEventPhotoTextInit(c)
 
 	// send notification button
+	case callback.SendNotificationFormatSelection:
+		eventID, ok := data_decoded["eventID"]
+		if !ok {
+			return fmt.Errorf("Failed get event id from callback data")
+		}
+		c.Set("eventID", eventID)
+		return h.SendNotificationFormatSelection(c)
+
+	// send notification button
 	case callback.SendNotification:
 		eventID, ok := data_decoded["eventID"]
 		if !ok {
 			return fmt.Errorf("Failed get event id from callback data")
 		}
 		c.Set("eventID", eventID)
-		return h.SendNotification(c)
-
-	// send notification offline button
-	case callback.SendNotificationOffline:
-		eventID, ok := data_decoded["eventID"]
+		format, ok := data_decoded["format"]
 		if !ok {
-			return fmt.Errorf("Failed get event id from callback data")
+			return fmt.Errorf("Failed get format from callback data")
 		}
-		c.Set("eventID", eventID)
-		c.Set("format", "offline")
-		return h.SendNotificationInit(c)
-
-		// send notification online button
-	case callback.SendNotificationOnline:
-		eventID, ok := data_decoded["eventID"]
-		if !ok {
-			return fmt.Errorf("Failed get event id from callback data")
-		}
-		c.Set("eventID", eventID)
-		c.Set("format", "online")
+		c.Set("format", format)
 		return h.SendNotificationInit(c)
 
 	// delete event button

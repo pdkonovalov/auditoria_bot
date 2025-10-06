@@ -82,7 +82,7 @@ func (r *repository) GetByEventID(eventID string, offline, online bool) ([]*enti
 	var query = `SELECT event_id, user_id, payment, payment_photo, payment_document, text, offline, online, created_at, updated_at, draft
 	FROM bookings
 	WHERE event_id = $1 AND draft IS FALSE AND offline = $2 AND online = $3
-	ORDER BY COALESCE(updated_at, created_at) ASC`
+	ORDER BY COALESCE(updated_at, created_at) DESC`
 	rows, err := r.pool.Query(context.Background(), query, eventID, offline, online)
 	if err != nil {
 		return nil, err

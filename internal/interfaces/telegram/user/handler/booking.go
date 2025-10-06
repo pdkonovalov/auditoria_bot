@@ -89,6 +89,11 @@ func (h *UserHandler) BookingInit(c tele.Context) error {
 		return fmt.Errorf("Failed update user, user not exists")
 	}
 
+	err = c.Send(message.BookingInitMessage)
+	if err != nil {
+		return err
+	}
+
 	switch user.State {
 	case state.BookingWaitInputContactInfo:
 		return c.Send(message.BookingWaitInputContactInfoMessage, message.BookingWaitInputContactInfoReplyKeyboard(user.Username))

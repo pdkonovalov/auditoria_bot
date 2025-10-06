@@ -6,7 +6,7 @@ import (
 	tele "gopkg.in/telebot.v4"
 )
 
-func SendNotificationMessageContent(
+func SendNotificationFormatSelectionMessageContent(
 	event *entity.Event,
 	createdBy *entity.User,
 	updatedBy *entity.User,
@@ -16,29 +16,31 @@ func SendNotificationMessageContent(
 ) []any {
 	content := make([]any, 0)
 	content = append(content, eventMessage(event, createdBy, updatedBy, url, bookingsOfflineCount, bookingsOnlineCount)...)
-	content = append(content, sendNotificationInlineKeyboard(event))
+	content = append(content, sendNotificationFormatSelectionInlineKeyboard(event))
 	return content
 }
 
-func sendNotificationInlineKeyboard(
+func sendNotificationFormatSelectionInlineKeyboard(
 	event *entity.Event,
 ) *tele.ReplyMarkup {
 	keyboard := [][]tele.InlineButton{
 		{
 			{
 				Text:   "Записавшимся оффлайн",
-				Unique: callback.SendNotificationOffline,
+				Unique: callback.SendNotification,
 				Data: callback.Encode(map[string]string{
 					"eventID": event.EventID,
+					"format":  "offline",
 				}),
 			},
 		},
 		{
 			{
 				Text:   "Записавшимся онлайн",
-				Unique: callback.SendNotificationOnline,
+				Unique: callback.SendNotification,
 				Data: callback.Encode(map[string]string{
 					"eventID": event.EventID,
+					"format":  "online",
 				}),
 			},
 		},

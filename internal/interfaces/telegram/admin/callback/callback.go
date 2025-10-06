@@ -18,9 +18,12 @@ const (
 )
 
 const (
-	GetBookings        = "getbookings"
-	GetBookingsOffline = "getbookingsoffline"
-	GetBookingsOnline  = "getbookingsonline"
+	ShowBookingsFormatSelection = "showbookingsformatselection"
+	ShowBookings                = "showbookings"
+)
+
+const (
+	Booking = "booking"
 )
 
 const (
@@ -35,9 +38,8 @@ const (
 )
 
 const (
-	SendNotification        = "sendnotification"
-	SendNotificationOffline = "sendnotificationoffline"
-	SendNotificationOnline  = "sendnotificationonline"
+	SendNotificationFormatSelection = "sendnotificationformatselection"
+	SendNotification                = "sendnotification"
 )
 
 const (
