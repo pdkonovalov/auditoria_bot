@@ -86,7 +86,7 @@ func ShowBookingsMessageContent(
 	} else if format == "online" && (event.Offline || bookingsOfflineExists) {
 		text = "Список записавшихся онлайн"
 	} else {
-		format = "Список записавшихся"
+		text = "Список записавшихся"
 	}
 
 	return []any{
