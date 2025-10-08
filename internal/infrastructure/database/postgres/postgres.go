@@ -86,6 +86,9 @@ func New(cfg *config.Config) (*pgxpool.Pool, error) {
 		text text,
 		offline bool,
 		online bool,
+		check_in bool,
+		check_in_at timestamptz,
+		check_in_by bigint references users(user_id),
 		created_at timestamptz,
 		updated_at timestamptz,
 		draft bool default true);`)

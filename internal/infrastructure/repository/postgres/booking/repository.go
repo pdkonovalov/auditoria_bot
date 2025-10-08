@@ -33,10 +33,10 @@ func (r *repository) Create(b *entity.Booking) (bool, error) {
 	}
 	query =
 		`INSERT INTO bookings
-		(event_id, user_id, payment, payment_photo, payment_document, text, offline, online, created_at, updated_at, draft)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`
+		(event_id, user_id, payment, payment_photo, payment_document, text, offline, online, check_in, check_in_at, check_in_by, created_at, updated_at, draft)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`
 	_, err = r.pool.Exec(context.Background(), query,
-		b.EventID, b.UserID, b.Payment, b.PaymentPhoto, b.PaymentDocument, b.Text, b.Offline, b.Online, b.CreatedAt, b.UpdatedAt, b.Draft)
+		b.EventID, b.UserID, b.Payment, b.PaymentPhoto, b.PaymentDocument, b.Text, b.Offline, b.Online, b.CheckIn, b.CheckInAt, b.CheckInBy, b.CreatedAt, b.UpdatedAt, b.Draft)
 	return false, err
 }
 
@@ -55,7 +55,7 @@ func (r *repository) Get(userID int64, eventID string) (*entity.Booking, bool, e
 		return nil, false, nil
 	}
 	query =
-		`SELECT event_id, user_id, payment, payment_photo, payment_document, text, offline, online, created_at, updated_at, draft
+		`SELECT event_id, user_id, payment, payment_photo, payment_document, text, offline, online, check_in, check_in_at, check_in_by, created_at, updated_at, draft
     	FROM bookings
     	WHERE user_id = $1 AND event_id = $2`
 	b := entity.Booking{}
@@ -68,6 +68,9 @@ func (r *repository) Get(userID int64, eventID string) (*entity.Booking, bool, e
 		&b.Text,
 		&b.Offline,
 		&b.Online,
+		&b.CheckIn,
+		&b.CheckInAt,
+		&b.CheckInBy,
 		&b.CreatedAt,
 		&b.UpdatedAt,
 		&b.Draft,
@@ -79,7 +82,7 @@ func (r *repository) Get(userID int64, eventID string) (*entity.Booking, bool, e
 }
 
 func (r *repository) GetByEventID(eventID string, offline, online bool) ([]*entity.Booking, error) {
-	var query = `SELECT event_id, user_id, payment, payment_photo, payment_document, text, offline, online, created_at, updated_at, draft
+	var query = `SELECT event_id, user_id, payment, payment_photo, payment_document, text, offline, online, check_in, check_in_at, check_in_by, created_at, updated_at, draft
 	FROM bookings
 	WHERE event_id = $1 AND draft IS FALSE AND offline = $2 AND online = $3
 	ORDER BY COALESCE(updated_at, created_at) DESC`
@@ -92,7 +95,7 @@ func (r *repository) GetByEventID(eventID string, offline, online bool) ([]*enti
 	var bookings []*entity.Booking
 	for rows.Next() {
 		booking := &entity.Booking{}
-		err := rows.Scan(&booking.EventID, &booking.UserID, &booking.Payment, &booking.PaymentPhoto, &booking.PaymentDocument, &booking.Text, &booking.Offline, &booking.Online, &booking.CreatedAt, &booking.UpdatedAt, &booking.Draft)
+		err := rows.Scan(&booking.EventID, &booking.UserID, &booking.Payment, &booking.PaymentPhoto, &booking.PaymentDocument, &booking.Text, &booking.Offline, &booking.Online, &booking.CheckIn, &booking.CheckInAt, &booking.CheckInBy, &booking.CreatedAt, &booking.UpdatedAt, &booking.Draft)
 		if err != nil {
 			return nil, err
 		}
@@ -103,7 +106,7 @@ func (r *repository) GetByEventID(eventID string, offline, online bool) ([]*enti
 }
 
 func (r *repository) GetByUserID(userID int64) ([]*entity.Booking, error) {
-	var query = `SELECT event_id, user_id, payment, payment_photo, payment_document, text, offline, online, created_at, updated_at, draft
+	var query = `SELECT event_id, user_id, payment, payment_photo, payment_document, text, offline, online, check_in, check_in_at, check_in_by, created_at, updated_at, draft
 		FROM bookings
 		WHERE user_id = $1 AND draft IS FALSE
 		ORDER BY COALESCE(updated_at, created_at) ASC`
@@ -116,7 +119,7 @@ func (r *repository) GetByUserID(userID int64) ([]*entity.Booking, error) {
 	var bookings []*entity.Booking
 	for rows.Next() {
 		booking := &entity.Booking{}
-		err := rows.Scan(&booking.EventID, &booking.UserID, &booking.Payment, &booking.PaymentPhoto, &booking.PaymentDocument, &booking.Text, &booking.Offline, &booking.Online, &booking.CreatedAt, &booking.UpdatedAt, &booking.Draft)
+		err := rows.Scan(&booking.EventID, &booking.UserID, &booking.Payment, &booking.PaymentPhoto, &booking.PaymentDocument, &booking.Text, &booking.Offline, &booking.Online, &booking.CheckIn, &booking.CheckInAt, &booking.CheckInBy, &booking.CreatedAt, &booking.UpdatedAt, &booking.Draft)
 		if err != nil {
 			return nil, err
 		}
@@ -149,9 +152,12 @@ func (r *repository) Update(b *entity.Booking) (bool, error) {
 			text =  $6,
 			offline = $7,
 			online = $8,
-			created_at = $9,
-			updated_at = $10,
-			draft = $11
+			check_in = $9,
+			check_in_at = $10,
+			check_in_by = $11,
+			created_at = $12,
+			updated_at = $13,
+			draft = $14
     	WHERE event_id = $1 AND user_id = $2`
 	_, err = r.pool.Exec(context.Background(), query,
 		b.EventID,
@@ -162,6 +168,9 @@ func (r *repository) Update(b *entity.Booking) (bool, error) {
 		b.Text,
 		b.Offline,
 		b.Online,
+		b.CheckIn,
+		b.CheckInAt,
+		b.CheckInBy,
 		b.CreatedAt,
 		b.UpdatedAt,
 		b.Draft,

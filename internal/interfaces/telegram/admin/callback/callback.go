@@ -27,6 +27,10 @@ const (
 )
 
 const (
+	BookingCheckIn = "bookingcheckin"
+)
+
+const (
 	EditEvent          = "editevent"
 	EditFormat         = "editformat"
 	EditOfflinePaid    = "editofflinepaid"

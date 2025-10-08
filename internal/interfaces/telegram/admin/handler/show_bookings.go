@@ -3,6 +3,7 @@ package handler
 import (
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/pdkonovalov/auditoria_bot/internal/domain/entity"
 	"github.com/pdkonovalov/auditoria_bot/internal/interfaces/telegram/admin/message"
@@ -153,6 +154,7 @@ func (h *AdminHandler) ShowBookings(c tele.Context) error {
 	content := message.ShowBookingsMessageContent(
 		event,
 		page,
+		bookingsPage,
 		bookingsPageUsers,
 		page != 0,
 		page != pageCount-1,
@@ -214,7 +216,92 @@ func (h *AdminHandler) Booking(c tele.Context) error {
 		return fmt.Errorf("Failed get user for booking, user not exists")
 	}
 
-	content := message.BookingMessageContent(bookingTarget, bookingTargetUser, page)
+	var bookingTargetCheckInBy *entity.User
+
+	if bookingTarget.CheckInBy != nil {
+		bookingTargetCheckInBy, exists, err = h.userRepository.Get(*bookingTarget.CheckInBy)
+		if err != nil {
+			return fmt.Errorf("Failed get check in by user for booking: %s", err)
+		}
+		if !exists {
+			return fmt.Errorf("Failed get check in by user for booking, user not exists")
+		}
+	}
+
+	content := message.BookingMessageContent(bookingTarget, bookingTargetCheckInBy, bookingTargetUser, page)
+
+	err = c.EditOrSend(content[0], content[1:]...)
+	if err != nil {
+		return c.Send(content[0], content[1:]...)
+	}
+	return nil
+}
+
+func (h *AdminHandler) BookingCheckIn(c tele.Context) error {
+	check_in_by, ok := c.Get("user").(entity.User)
+	if !ok {
+		return fmt.Errorf("Failed get user from context")
+	}
+
+	eventID, ok := c.Get("eventID").(string)
+	if !ok {
+		return fmt.Errorf("Failed get event id from context")
+	}
+
+	userIDStr, ok := c.Get("userID").(string)
+	if !ok {
+		return fmt.Errorf("Failed get user id from context")
+	}
+
+	userID, err := strconv.ParseInt(userIDStr, 10, 64)
+	if err != nil {
+		return fmt.Errorf("Invalid user id value in context. Failed convert to int64: %s", err)
+	}
+
+	bookingTarget, exists, err := h.bookingRepository.Get(userID, eventID)
+	if err != nil {
+		return fmt.Errorf("Failed get booking: %s", err)
+	}
+	if !exists {
+		return fmt.Errorf("Failed get booking, booking not exists")
+	}
+
+	bookings, err := h.bookingRepository.GetByEventID(eventID, bookingTarget.Offline, bookingTarget.Online)
+	if err != nil {
+		return fmt.Errorf("Failed get bookings: %s", err)
+	}
+
+	var page int
+
+	for i, booking := range bookings {
+		if booking.UserID == userID {
+			page = i / h.bookingsPerPage
+			break
+		}
+	}
+
+	bookingTargetUser, exists, err := h.userRepository.Get(bookingTarget.UserID)
+	if err != nil {
+		return fmt.Errorf("Failed get user for booking: %s", err)
+	}
+	if !exists {
+		return fmt.Errorf("Failed get user for booking, user not exists")
+	}
+
+	bookingTarget.CheckIn = !bookingTarget.CheckIn
+	check_in_at := time.Now()
+	bookingTarget.CheckInAt = &check_in_at
+	bookingTarget.CheckInBy = &check_in_by.UserID
+
+	exists, err = h.bookingRepository.Update(bookingTarget)
+	if err != nil {
+		return fmt.Errorf("Failed check in booking: %s", err)
+	}
+	if !exists {
+		return fmt.Errorf("Failed check in booking, booking not exists")
+	}
+
+	content := message.BookingMessageContent(bookingTarget, &check_in_by, bookingTargetUser, page)
 
 	err = c.EditOrSend(content[0], content[1:]...)
 	if err != nil {

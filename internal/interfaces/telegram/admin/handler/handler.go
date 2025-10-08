@@ -170,6 +170,20 @@ func (h *AdminHandler) OnCallback(c tele.Context) error {
 		c.Set("userID", userID)
 		return h.Booking(c)
 
+	// booking check in button
+	case callback.BookingCheckIn:
+		eventID, ok := data_decoded["eventID"]
+		if !ok {
+			return fmt.Errorf("Failed get event id from callback data")
+		}
+		c.Set("eventID", eventID)
+		userID, ok := data_decoded["userID"]
+		if !ok {
+			return fmt.Errorf("Failed get user id from callback data")
+		}
+		c.Set("userID", userID)
+		return h.BookingCheckIn(c)
+
 	// edit event button
 	case callback.EditEvent:
 		eventID, ok := data_decoded["eventID"]

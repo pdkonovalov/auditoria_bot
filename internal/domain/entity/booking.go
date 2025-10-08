@@ -15,6 +15,9 @@ type Booking struct {
 	Text            string
 	Offline         bool
 	Online          bool
+	CheckIn         bool
+	CheckInAt       *time.Time
+	CheckInBy       *int64
 	CreatedAt       time.Time
 	UpdatedAt       *time.Time
 	Draft           bool

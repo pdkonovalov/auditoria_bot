@@ -73,6 +73,7 @@ func showBookingsFormatSelectionInlineKeyboard(
 func ShowBookingsMessageContent(
 	event *entity.Event,
 	page int,
+	bookings []*entity.Booking,
 	bookingsUsers []*entity.User,
 	prevBookingsExists bool,
 	nextBookingsExists bool,
@@ -94,6 +95,7 @@ func ShowBookingsMessageContent(
 		showBookingsInlineKeyboard(
 			event,
 			page,
+			bookings,
 			bookingsUsers,
 			prevBookingsExists,
 			nextBookingsExists,
@@ -108,6 +110,7 @@ func ShowBookingsMessageContent(
 func showBookingsInlineKeyboard(
 	event *entity.Event,
 	page int,
+	bookings []*entity.Booking,
 	bookingsUsers []*entity.User,
 	prevBookingsExists bool,
 	nextBookingsExists bool,
@@ -116,11 +119,19 @@ func showBookingsInlineKeyboard(
 	format string,
 ) *tele.ReplyMarkup {
 	keyboard := make([][]tele.InlineButton, 0)
-	for _, user := range bookingsUsers {
+	for i, user := range bookingsUsers {
+		var booking_template string
+
+		if bookings[i].CheckIn {
+			booking_template = "✅ %s %s"
+		} else {
+			booking_template = "%s %s"
+		}
+
 		keyboard = append(keyboard,
 			[]tele.InlineButton{
 				{
-					Text:   fmt.Sprintf("%s %s", user.FirstName, user.LastName),
+					Text:   fmt.Sprintf(booking_template, user.FirstName, user.LastName),
 					Unique: callback.Booking,
 					Data: callback.Encode(map[string]string{
 						"eventID": event.EventID,
@@ -130,6 +141,7 @@ func showBookingsInlineKeyboard(
 			},
 		)
 	}
+
 	if prevBookingsExists || nextBookingsExists {
 		navigationRow := make([]tele.InlineButton, 0)
 		if prevBookingsExists {
@@ -156,6 +168,7 @@ func showBookingsInlineKeyboard(
 		}
 		keyboard = append(keyboard, navigationRow)
 	}
+
 	if (event.Offline || bookingsOfflineExists) &&
 		(event.Online || bookingsOnlineExists) {
 		keyboard = append(keyboard,
@@ -187,12 +200,13 @@ func showBookingsInlineKeyboard(
 
 func BookingMessageContent(
 	booking *entity.Booking,
+	check_in_by *entity.User,
 	user *entity.User,
 	page int,
 ) []any {
 	content := make([]any, 0)
 	content = append(content,
-		bookingMessage(booking, user)...,
+		bookingMessage(booking, check_in_by, user)...,
 	)
 	content = append(content,
 		bookingInlineKeyboard(booking, page),
@@ -202,11 +216,55 @@ func BookingMessageContent(
 
 func bookingMessage(
 	booking *entity.Booking,
+	check_in_by *entity.User,
 	user *entity.User,
 ) []any {
 	parts := make([]string, 0)
 	entities := make(tele.Entities, 0)
 	curLen := 0
+
+	if booking.CheckIn || booking.CheckInAt != nil {
+		check_in_key := "Статус:"
+
+		check_in_value_parts := make([]string, 0)
+
+		if booking.CheckIn {
+			check_in_value_parts = append(check_in_value_parts, "✅")
+		} else {
+			check_in_value_parts = append(check_in_value_parts, "-")
+		}
+
+		if booking.CheckInAt != nil {
+			check_in_value_parts = append(check_in_value_parts, "изменено")
+
+			check_in_value_parts = append(check_in_value_parts,
+				booking.CheckInAt.Format("15:04 02.01.2006"),
+			)
+
+			if check_in_by != nil {
+				check_in_value_parts = append(check_in_value_parts,
+					check_in_by.FirstName,
+					check_in_by.LastName,
+				)
+			}
+		}
+
+		check_in_value := strings.Join(check_in_value_parts, " ")
+
+		parts = append(parts,
+			fmt.Sprintf("%s %s\n", check_in_key, check_in_value),
+		)
+
+		entities = append(entities,
+			tele.MessageEntity{
+				Type:   tele.EntityBold,
+				Offset: curLen,
+				Length: len(utf16.Encode([]rune(check_in_key))),
+			},
+		)
+
+		curLen += len(utf16.Encode([]rune(parts[len(parts)-1])))
+	}
 
 	telegram := "Телеграм:"
 	var telegramURL string
@@ -221,7 +279,7 @@ func bookingMessage(
 	entities = append(entities,
 		tele.MessageEntity{
 			Type:   tele.EntityBold,
-			Offset: 0,
+			Offset: curLen,
 			Length: len(utf16.Encode([]rune(telegram))),
 		},
 	)
@@ -386,12 +444,40 @@ func bookingInlineKeyboard(
 	page int,
 ) *tele.ReplyMarkup {
 	keyboard := make([][]tele.InlineButton, 0)
+
+	if booking.CheckIn {
+		keyboard = append(keyboard,
+			[]tele.InlineButton{
+				{
+					Text:   "Убрать отметку ✅",
+					Unique: callback.BookingCheckIn,
+					Data: callback.Encode(map[string]string{
+						"eventID": booking.EventID,
+						"userID":  fmt.Sprintf("%v", booking.UserID),
+					}),
+				},
+			})
+	} else {
+		keyboard = append(keyboard,
+			[]tele.InlineButton{
+				{
+					Text:   "Добавить отметку ✅",
+					Unique: callback.BookingCheckIn,
+					Data: callback.Encode(map[string]string{
+						"eventID": booking.EventID,
+						"userID":  fmt.Sprintf("%v", booking.UserID),
+					}),
+				},
+			})
+	}
+
 	var format string
 	if booking.Offline {
 		format = "offline"
 	} else {
 		format = "online"
 	}
+
 	keyboard = append(keyboard,
 		[]tele.InlineButton{
 			{
@@ -405,5 +491,6 @@ func bookingInlineKeyboard(
 			},
 		},
 	)
+
 	return &tele.ReplyMarkup{InlineKeyboard: keyboard}
 }
